@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<!-- MiSans:与主界面同源字体,不再用系统默认(微软雅黑) -->
+<link rel="stylesheet" href="fonts/misans/MiSans-Regular.min.css">
+<link rel="stylesheet" href="fonts/misans/MiSans-Medium.min.css">
+<link rel="stylesheet" href="fonts/misans/MiSans-Demibold.min.css">
+<style>
+  html, body { margin: 0; padding: 0; background: transparent; overflow: hidden; user-select: none; }
+  body { font: 13px/1 'MiSans', 'Segoe UI', 'Microsoft YaHei', sans-serif; }
+  /* 配色随应用主题(主进程 trayData 下发 theme);acrylic 机型 DWM 提供模糊底,页面只补一层色,
+     非 acrylic 机型底色本身够浓 —— 圆角/描边一律由页面自绘(实测 DWM 不一定出圆角) */
+  body[data-theme="clear"]      { --bg: rgba(14, 17, 24, .96);  --bg-ac: rgba(14, 17, 24, .80); --tx: #f7f9ff; --acc: #ff8a2a; --hov: rgba(255,255,255,.07); --act: rgba(255,255,255,.04); --sep: rgba(255,255,255,.08); --bd: rgba(255,255,255,.10); --r: 8px; }
+  body[data-theme="frost"]      { --bg: rgba(15, 18, 27, .96);  --bg-ac: rgba(15, 18, 27, .80); --tx: #f7f9ff; --acc: #ff8a2a; --hov: rgba(255,255,255,.07); --act: rgba(255,255,255,.04); --sep: rgba(255,255,255,.08); --bd: rgba(255,255,255,.10); --r: 8px; }
+  body[data-theme="liquid"]     { --bg: rgba(17, 21, 36, .96);  --bg-ac: rgba(17, 21, 36, .80); --tx: #f7f9ff; --acc: #ff8a2a; --hov: rgba(255,255,255,.08); --act: rgba(255,255,255,.05); --sep: rgba(255,255,255,.09); --bd: rgba(255,255,255,.12); --r: 8px; }
+  body[data-theme="tactical"]   { --bg: rgba(14, 18, 10, .97);  --bg-ac: rgba(14, 18, 10, .84); --tx: #d6ddd2; --acc: #9fc4ea; --hov: rgba(214,221,210,.08); --act: rgba(214,221,210,.05); --sep: rgba(214,221,210,.10); --bd: rgba(214,221,210,.13); --r: 6px; }
+  body[data-theme="versus"]     { --bg: rgba(12, 13, 18, .97);  --bg-ac: rgba(12, 13, 18, .84); --tx: #f2f3f7; --acc: #ffffff; --hov: rgba(255,255,255,.08); --act: rgba(255,255,255,.05); --sep: rgba(255,255,255,.10); --bd: rgba(255,255,255,.13); --r: 10px; }
+  body[data-theme="crt"]        { --bg: rgba(3, 7, 4, .97);     --bg-ac: rgba(3, 7, 4, .90);    --tx: #52ff8a; --acc: #52ff8a; --hov: rgba(82,255,138,.10);  --act: rgba(82,255,138,.06);  --sep: rgba(82,255,138,.14);  --bd: rgba(82,255,138,.25);  --r: 0; }
+  body[data-theme="poster"]     { --bg: rgba(246, 243, 234, .99); --bg-ac: rgba(246, 243, 234, .92); --tx: #191813; --acc: #d6421f; --hov: rgba(25,24,19,.07); --act: rgba(25,24,19,.04); --sep: rgba(25,24,19,.10); --bd: rgba(25,24,19,.16); --r: 4px; }
+  body[data-theme="printstream"]{ --bg: rgba(251, 250, 247, .99); --bg-ac: rgba(251, 250, 247, .92); --tx: #0c0c0d; --acc: #2e6b50; --hov: rgba(12,12,13,.06); --act: rgba(12,12,13,.04); --sep: rgba(12,12,13,.09); --bd: rgba(12,12,13,.14); --r: 2px; }
+  body[data-theme="perfect"],
+  body[data-theme="blue"]       { --bg: rgba(238, 243, 250, .99); --bg-ac: rgba(238, 243, 250, .92); --tx: #1c2a3f; --acc: #2f7cf6; --hov: rgba(47,89,160,.08); --act: rgba(47,89,160,.05); --sep: rgba(47,89,160,.12); --bd: rgba(47,89,160,.20); --r: 12px; }
+  .menu { background: var(--bg); color: var(--tx); border: 1px solid var(--bd); border-radius: var(--r); padding: 5px 0; box-sizing: border-box; overflow: hidden; }
+  body[data-ac="1"] .menu { background: var(--bg-ac); } /* 系统亚克力托底时减淡补色,浓淡交给 DWM */
+  .mi { height: 34px; display: flex; align-items: center; padding: 0 12px 0 4px; margin: 0 4px; border-radius: 5px; cursor: default; }
+  .mi:hover { background: var(--hov); }
+  .mi:active { background: var(--act); }
+  .chk { width: 26px; text-align: center; font-size: 12px; flex: none; color: var(--acc); }
+  .mi:not(.on) .chk { visibility: hidden; }
+  .lb { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 500; letter-spacing: .1px; }
+  .sep { height: 9px; position: relative; }
+  .sep::after { content: ""; position: absolute; left: 36px; right: 12px; top: 4px; height: 1px; background: var(--sep); }
+  /* 求Star行:作为普通菜单行嵌在开机自启上方——左侧对话框从侧边滑入,右侧水月探头;整行可点跳仓库主页 */
+  .star-row { height: 48px; display: flex; align-items: center; gap: 8px; margin: 0 4px; padding: 0 2px 0 8px; border-radius: 5px; cursor: pointer; }
+  .star-row:hover { background: var(--hov); }
+  .star-row:active { background: var(--act); }
+  .star-row .tip { flex: 1; min-width: 0; background: var(--bg); border: 1px solid var(--bd); border-radius: 8px; padding: 5px 9px; font-size: 11px; line-height: 1.5; letter-spacing: .2px; animation: tip-in .5s cubic-bezier(.3, 1.2, .5, 1) .3s both; }
+  body[data-ac="1"] .star-row .tip { background: var(--bg-ac); }
+  .star-row .tip b { color: var(--acc); font-weight: 600; }
+  .star-row .tip .zh, .star-row .tip .en { display: none; }
+  body[data-lang="zh"] .star-row .tip .zh { display: block; }
+  body[data-lang="en"] .star-row .tip .en { display: block; }
+  .star-row .peek { width: 40px; height: 40px; flex: none; animation: peek-in .6s cubic-bezier(.34, 1.56, .64, 1) .1s both; }
+  .star-row .peek img { width: 100%; height: 100%; animation: peek-bob 2.8s ease-in-out .9s infinite; }
+  @keyframes tip-in { from { opacity: 0; transform: translateX(-16px); } to { opacity: 1; transform: translateX(0); } }
+  /* 水月出场:弹性弹出后缓缓上下浮动(此前 keyframes 丢失,立绘一直静止出现,这里补回) */
+  @keyframes peek-in { from { opacity: 0; transform: translateY(16px) scale(.7); } to { opacity: 1; transform: translateY(0) scale(1); } }
+  @keyframes peek-bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-3.5px); } }
+</style>
+</head>
+<body data-theme="clear">
+<div id="m" class="menu"></div>
+<script>
+  trayapi.onData((p) => {
+    document.body.dataset.theme = p.theme || 'clear'; // 随应用主题,弃用系统 dark/light 判断
+    document.body.dataset.ac = p.acrylic ? '1' : '0';
+    document.body.dataset.lang = p.lang || 'zh'; // 求Star气泡随界面语言切换
+    document.getElementById('m').innerHTML = p.items.map((it) => it.type === 'separator'
+      ? '<div class="sep"></div>'
+      : it.type === 'star'
+        ? '<div class="star-row" data-id="star"><div class="tip"><span class="zh">觉得好用?请帮我点个免费的 <b>Star ★</b> 支持一下!</span><span class="en">Enjoy it? A free <b>Star ★</b> helps a lot!</span></div><div class="peek"><img src="../assets/tray-star.png" alt=""></div></div>'
+        : '<div class="mi' + (it.checked ? ' on' : '') + '" data-id="' + it.id + '"><span class="chk">✓</span><span class="lb">' + it.label + '</span></div>').join('');
+  });
+  document.addEventListener('click', (e) => { const mi = e.target.closest('.mi'); if (mi) trayapi.click(mi.dataset.id); const st = e.target.closest('.star-row'); if (st) trayapi.click(st.dataset.id); });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') trayapi.hide(); });
+  document.addEventListener('contextmenu', (e) => e.preventDefault());
+</script>
+</body>
+</html>

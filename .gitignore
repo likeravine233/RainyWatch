@@ -1,0 +1,28 @@
+node_modules/
+dist-release*/
+build-tmp*/
+_dev/*.log
+_dev/*.html
+_dev/*.txt
+_dev/out/
+_dev/shots/
+builder-debug.yml
+builder-effective-config.yaml
+_dev/logos/
+
+# 本机继续开发用的一次性脚本/备份:只留本地,不进仓库
+_dev/*-patch.py
+_dev/lab-*.js
+_dev/test-*.mjs
+_dev/icon-backup.png
+
+# python 编译缓存
+__pycache__/
+
+_dev/fix-mock.js
+_dev/set-mock-cph24.js
+_dev/ina-survey.js
+_dev/color-audit.js
+_dev/collect-logos.js
+_dev/vhs-embed.css
+_dev/site-check/

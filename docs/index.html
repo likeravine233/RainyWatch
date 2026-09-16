@@ -1,0 +1,1004 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#0a0d13">
+<title>RainyWatch · 小暴雨助手 — 常驻桌面的 CS2 赛况小组件</title>
+<meta name="description" content="RainyWatch(小暴雨助手):常驻桌面的 CS2 赛况小组件。直播比分、赛程倒计时、赛果与变阵,一瞥即知。Windows 10/11 免安装单文件,免费开源。">
+<link rel="icon" type="image/png" href="./icon-64.png">
+<link rel="apple-touch-icon" href="./icon-180.png">
+<link rel="preload" href="./fonts/chakra-700.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="./fonts/notosans/noto-sans-sc.min.css">
+<style>
+  /* 应用同款自托管字体:Chakra Petch(西文展示)/ Space Grotesk(西文正文)/ 思源黑体(中文,切片按 unicode-range 惰性加载) */
+  @font-face { font-family: 'Chakra Petch'; font-style: normal; font-weight: 500; font-display: swap; src: url('./fonts/chakra-500.woff2') format('woff2'); }
+  @font-face { font-family: 'Chakra Petch'; font-style: normal; font-weight: 700; font-display: swap; src: url('./fonts/chakra-700.woff2') format('woff2'); }
+  @font-face { font-family: 'Space Grotesk'; font-style: normal; font-weight: 400; font-display: swap; src: url('./fonts/space-400.woff2') format('woff2'); }
+  @font-face { font-family: 'Space Grotesk'; font-style: normal; font-weight: 500; font-display: swap; src: url('./fonts/space-500.woff2') format('woff2'); }
+  @font-face { font-family: 'Space Grotesk'; font-style: normal; font-weight: 700; font-display: swap; src: url('./fonts/space-700.woff2') format('woff2'); }
+  :root {
+    color-scheme: dark;
+    --bg: #0a0d13;
+    --panel: #0f131c;
+    --line: rgba(255, 255, 255, 0.08);
+    --line-2: rgba(255, 255, 255, 0.16);
+    --text: #e7ecf3;
+    --text-2: #9aa5b4;
+    --text-3: #66707f;
+    --amber: #e2b04a;
+    --spectrum: linear-gradient(90deg, #ff6b6b, #ffb35c, #ffe66d, #5fd98b, #54b9ec, #8a7dff, #c77dff);
+    --sans: 'Space Grotesk', 'Noto Sans SC', 'Microsoft YaHei', sans-serif;
+    --disp: 'Chakra Petch', 'Noto Sans SC', 'Microsoft YaHei', sans-serif;
+    --mono: ui-monospace, "Cascadia Mono", Consolas, "Courier New", monospace;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 16px;
+    line-height: 1.8;
+    overflow-x: clip;
+    -webkit-tap-highlight-color: transparent;
+  }
+  ::selection { background: rgba(138, 125, 255, 0.35); }
+  a { color: inherit; text-decoration: none; }
+  img { max-width: 100%; }
+  code {
+    font-family: var(--mono);
+    font-size: 0.84em;
+    background: rgba(255, 255, 255, 0.07);
+    border: 1px solid var(--line);
+    border-radius: 5px;
+    padding: 2px 8px;
+    white-space: nowrap;
+  }
+  a:focus-visible, button:focus-visible {
+    outline: 2px solid #5aaef2;
+    outline-offset: 3px;
+    border-radius: 4px;
+  }
+  .skip {
+    position: fixed; top: -48px; left: 16px; z-index: 50;
+    background: var(--panel); border: 1px solid var(--line-2);
+    padding: 8px 16px; border-radius: 8px; font-size: 0.85rem;
+    transition: top 0.2s ease;
+  }
+  .skip:focus { top: 12px; }
+
+  /* ── 顶部光谱线(全站唯一的彩虹,与页脚呼应) ── */
+  body::before {
+    content: ""; position: fixed; top: 0; left: 0; right: 0; height: 2px;
+    background: var(--spectrum); z-index: 30;
+  }
+
+  /* ══ 底片背景:FILM×PLAIN 胶片带,参数与样式 1:1 移植自应用队色对撞主题(src/style.css #app .vhs)══
+     --bw 120 条带宽 / --tile 140 画格周期 / --gap 10 带缝 / --ang -12deg 整面倾角 /
+     齿孔节距 tile/8、画窗 inset 13.5% 高 86% 圆角 9px、刻字 Chakra Petch 1.08 倍带宽,
+     奇数带黑胶片沿带轴下行、偶数带灰面板 + ///RAINYWATCH/// 竖排刻字上行,严格相邻反向。
+     唯一偏离(应用 30s/画格):站点以最低恒定速度漂移(≈0.3px/s),线性,永不加减速;
+     组件整体 opacity .3 ≈ 应用里把窗口不透明度调到很低的观感 */
+  .vhsbg {
+    --bw: 120px; --tile: 140px; --dur: 420s; --ik: 40; --gap: 10px; --ang: -12deg;
+    --base: #202229; --band: #0a0b0e; --scan: 0.3;
+    position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none;
+    background: var(--base); opacity: 0.3;
+  }
+  .vhsbg .deck {
+    position: absolute; left: 50%; top: 50%;
+    transform: translate(-50%, -50%) rotate(var(--ang));
+    display: flex; gap: var(--gap); justify-content: center;
+  }
+  .vhsbg .ribbon { flex: 0 0 auto; width: var(--bw); height: 100%; position: relative; overflow: hidden; background: var(--base); }
+  .vhsbg .film { position: absolute; left: 0; right: 0; top: calc(-1 * var(--tile)); height: calc(100% + 2 * var(--tile)); }
+  @keyframes film-dn { from { transform: translateY(0); } to { transform: translateY(var(--tile)); } }
+  .vhsbg .deck .ribbon:nth-child(odd) .film { animation: film-dn var(--dur) linear infinite; }
+  .vhsbg .ribbon.f .film {
+    background: linear-gradient(90deg,
+      var(--band) 0 calc(var(--bw) * .03),
+      transparent calc(var(--bw) * .03) calc(var(--bw) * .12),
+      var(--band) calc(var(--bw) * .12) calc(100% - var(--bw) * .12),
+      transparent calc(100% - var(--bw) * .12) calc(100% - var(--bw) * .03),
+      var(--band) calc(100% - var(--bw) * .03));
+  }
+  .vhsbg .ribbon.f .film::before, .vhsbg .ribbon.f .film::after {
+    content: ""; position: absolute; top: 0; bottom: 0; width: calc(var(--bw) * .09);
+    background: var(--band);
+    -webkit-mask: repeating-linear-gradient(180deg, #000 0 calc(var(--tile) / 16), transparent calc(var(--tile) / 16) calc(var(--tile) / 8));
+            mask: repeating-linear-gradient(180deg, #000 0 calc(var(--tile) / 16), transparent calc(var(--tile) / 16) calc(var(--tile) / 8));
+  }
+  .vhsbg .ribbon.f .film::before { left: calc(var(--bw) * .03); }
+  .vhsbg .ribbon.f .film::after { right: calc(var(--bw) * .03); }
+  .vhsbg .ribbon.f .frm {
+    position: absolute; left: calc(var(--bw) * .135); right: calc(var(--bw) * .135);
+    height: calc(var(--tile) * .86); border-radius: 9px; background: var(--base);
+  }
+  .vhsbg .ribbon.p::after { content: ""; position: absolute; inset: 0; z-index: 1; box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .35); pointer-events: none; }
+  .vhsbg .ribbon.p .film { background: linear-gradient(#191b22, #191b22); }
+  .vhsbg .run {
+    position: absolute; top: 0; left: 0; right: 0;
+    display: flex; align-items: center; justify-content: center;
+    writing-mode: vertical-rl; text-orientation: mixed; white-space: nowrap;
+    animation: txt-up calc(var(--dur) * var(--ik)) linear infinite;
+  }
+  .vhsbg .run b {
+    flex: 0 0 auto;
+    font: 700 calc(var(--bw) * 1.08)/1 'Chakra Petch', 'Space Grotesk', sans-serif;
+    letter-spacing: .06em; margin-inline-end: calc(var(--bw) * .14);
+    color: #2c3039;
+    text-shadow: 0 1px 0 rgba(0, 0, 0, .5), 0 -1px 0 rgba(255, 255, 255, .05);
+  }
+  @keyframes txt-up { from { transform: translateY(0); } to { transform: translateY(-50%); } }
+  .vhsbg::before {
+    content: ""; position: absolute; inset: 0; z-index: 2;
+    background: radial-gradient(120% 100% at 50% 46%, transparent 58%, rgba(0, 0, 0, .38) 100%);
+  }
+  .vhsbg::after {
+    content: ""; position: absolute; inset: 0; z-index: 3;
+    background: repeating-linear-gradient(0deg, rgba(0, 0, 0, .16) 0 1px, transparent 1px 3px);
+    opacity: var(--scan);
+  }
+
+  /* 暗房罩:压暗四角 + 极淡颗粒,保证文字对比度 */
+  .veil { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
+  .veil::before {
+    content: ""; position: absolute; inset: 0;
+    background: linear-gradient(180deg, rgba(10, 13, 19, 0.5), transparent 16%, transparent 84%, rgba(10, 13, 19, 0.4));
+  }
+  .veil::after {
+    content: ""; position: absolute; inset: 0; opacity: 0.05;
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
+    background-size: 160px;
+  }
+
+  /* ── 导航 ── */
+  .nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 20; height: 64px;
+    display: flex; align-items: center; gap: 26px;
+    padding: 0 clamp(20px, 4vw, 44px);
+    background: rgba(10, 13, 19, 0.6);
+    backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+    border-bottom: 1px solid var(--line);
+  }
+  .brand { display: flex; align-items: center; gap: 10px; font-family: var(--disp); font-weight: 650; letter-spacing: 0.01em; white-space: nowrap; }
+  .brand img { width: 24px; height: 24px; display: block; }
+  .brand .cn { color: var(--text-3); font-weight: 450; font-size: 0.84rem; margin-left: 2px; }
+  .nav-links { display: flex; gap: 24px; margin-left: auto; }
+  .nav-links a { font-size: 0.87rem; color: var(--text-2); transition: color 0.2s ease; touch-action: manipulation; }
+  .nav-links a:hover { color: var(--text); }
+  .nav-actions { display: flex; align-items: center; gap: 12px; margin-left: auto; }
+  .nav-links + .nav-actions { margin-left: 0; }
+  .lang {
+    font: inherit; font-size: 0.78rem; letter-spacing: 0.1em;
+    color: var(--text-2); background: transparent;
+    border: 1px solid var(--line); border-radius: 999px;
+    padding: 5px 13px; cursor: pointer; touch-action: manipulation;
+    transition: color 0.2s ease, border-color 0.2s ease;
+  }
+  .lang:hover { color: var(--text); border-color: var(--line-2); }
+  .gh {
+    display: inline-flex; align-items: center; gap: 7px;
+    font-size: 0.84rem; color: var(--text-2);
+    border: 1px solid var(--line); border-radius: 999px; padding: 5px 14px;
+    transition: color 0.2s ease, border-color 0.2s ease;
+    touch-action: manipulation;
+  }
+  .gh:hover { color: var(--text); border-color: var(--line-2); }
+  .gh svg { width: 15px; height: 15px; fill: currentColor; }
+
+  main { position: relative; z-index: 2; }
+
+  /* ── Hero ── */
+  .hero {
+    min-height: 100svh;
+    max-width: 1200px; margin: 0 auto;
+    padding: 130px clamp(20px, 4vw, 44px) 80px;
+    display: grid; grid-template-columns: minmax(0, 1.04fr) minmax(0, 0.96fr);
+    align-items: center; gap: clamp(36px, 5vw, 76px);
+    position: relative;
+  }
+  .chip {
+    display: inline-flex; align-items: center; gap: 9px;
+    font-family: var(--disp); font-size: 0.8rem; letter-spacing: 0.1em;
+    color: var(--text-2); border: 1px solid var(--line); border-radius: 999px;
+    padding: 7px 16px;
+  }
+  .chip .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--spectrum); flex: none; }
+  .hero h1 { margin-top: 26px; }
+  .hero .t1 {
+    display: block; font-family: var(--disp);
+    font-size: clamp(2.7rem, 5.6vw, 4.15rem);
+    font-weight: 700; letter-spacing: 0; line-height: 1.04;
+  }
+  .hero .t2 {
+    display: block; margin-top: 12px;
+    font-size: clamp(1.05rem, 1.9vw, 1.4rem); font-weight: 500;
+    letter-spacing: 0.32em; color: var(--text-2);
+  }
+  .rule { width: 64px; height: 3px; background: var(--spectrum); border-radius: 2px; margin-top: 24px; }
+  .couplet {
+    margin-top: 18px; color: var(--text-2);
+    font-size: 1.02rem; letter-spacing: 0.05em; line-height: 1.9;
+  }
+  .pos {
+    margin-top: 22px; font-size: clamp(1.12rem, 1.6vw, 1.3rem);
+    font-weight: 550; line-height: 1.75; max-width: 30em; text-wrap: balance;
+  }
+  .sub { margin-top: 12px; color: var(--text-2); max-width: 34em; }
+  .cta { display: flex; flex-wrap: wrap; align-items: center; gap: 16px; margin-top: 32px; }
+  .btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    font: inherit; font-size: 0.95rem; font-weight: 650;
+    padding: 13px 26px; border-radius: 10px;
+    transition: transform 0.2s ease, filter 0.2s ease, border-color 0.2s ease, background-color 0.2s ease;
+    touch-action: manipulation;
+  }
+  /* 虹色主按钮:空闲是一枚暗色按钮,只靠一圈细虹环透出身份;hover 时暗幕
+     向指针侧收缩褪去,完整虹色显影,细环转亮。暗幕是叠在虹色条上的径向渐变
+     层,层参数走 @property 注册的自定义属性才能参与 transition 逐帧插值
+     (背景图整体不可动画);不支持 @property 的浏览器退化为瞬间切换。 */
+  @property --gb-x { syntax: '<percentage>'; inherits: false; initial-value: 50%; }
+  @property --gb-y { syntax: '<percentage>'; inherits: false; initial-value: 50%; }
+  @property --gb-rx { syntax: '<percentage>'; inherits: false; initial-value: 170%; }
+  @property --gb-ry { syntax: '<percentage>'; inherits: false; initial-value: 280%; }
+  @property --gb-hi { syntax: '<number>'; inherits: false; initial-value: 1; }
+  @property --gb-ring { syntax: '<angle>'; inherits: true; initial-value: 160deg; }
+  .btn-primary {
+    position: relative; color: #e8edf5;
+    background:
+      radial-gradient(var(--gb-rx) var(--gb-ry) at var(--gb-x) var(--gb-y),
+        rgba(13, 17, 25, var(--gb-hi)) 0%,
+        rgba(13, 17, 25, calc(var(--gb-hi) * 0.96)) 44%,
+        rgba(13, 17, 25, 0) 100%),
+      var(--spectrum);
+    transition:
+      --gb-x 0.6s cubic-bezier(0.3, 0.7, 0.3, 1), --gb-y 0.6s cubic-bezier(0.3, 0.7, 0.3, 1),
+      --gb-rx 0.6s cubic-bezier(0.3, 0.7, 0.3, 1), --gb-ry 0.6s cubic-bezier(0.3, 0.7, 0.3, 1),
+      --gb-hi 0.6s cubic-bezier(0.3, 0.7, 0.3, 1), --gb-ring 0.9s ease,
+      color 0.45s ease, transform 0.2s ease;
+  }
+  .btn-primary:hover {
+    --gb-x: 22%; --gb-y: 130%; --gb-rx: 8%; --gb-ry: 14%; --gb-hi: 0; --gb-ring: 320deg;
+    color: #10131a;
+    transform: translateY(-1px);
+  }
+  /* 1px 虹色细环:两层 mask 相减只留边框一圈;空闲半透,hover 转亮且色相转动 */
+  @supports (mask-composite: exclude) or (-webkit-mask-composite: xor) {
+    .btn-primary::before {
+      content: ""; position: absolute; inset: 0; border-radius: inherit; padding: 1px;
+      background: linear-gradient(var(--gb-ring),
+        #ff6b6b, #ffb35c, #ffe66d, #5fd98b, #54b9ec, #8a7dff, #c77dff);
+      mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      mask-composite: exclude; -webkit-mask-composite: xor;
+      opacity: calc(0.38 + (1 - var(--gb-hi)) * 0.62);
+      pointer-events: none;
+    }
+  }
+  .btn-ghost { border: 1px solid var(--line); color: var(--text); background: rgba(255, 255, 255, 0.03); }
+  .btn-ghost:hover { border-color: var(--line-2); background: rgba(255, 255, 255, 0.06); transform: translateY(-1px); }
+  .tlink {
+    font-family: var(--sans); font-size: 0.9rem;
+    color: var(--text-2); transition: color 0.2s ease;
+    touch-action: manipulation;
+  }
+  .tlink:hover { color: var(--text); }
+  .meta {
+    margin-top: 30px; font-family: var(--disp); font-size: 0.76rem;
+    letter-spacing: 0.12em; color: var(--text-3);
+  }
+  .hero-visual { display: flex; justify-content: center; }
+  .mount {
+    position: relative; background: var(--panel);
+    border: 1px solid var(--line); border-radius: 6px;
+    padding: 16px 22px 12px; width: min(420px, 100%);
+    box-shadow: 0 44px 90px rgba(3, 5, 9, 0.6);
+    transform: perspective(1400px) rotateY(-9deg) rotateX(1.2deg);
+  }
+  .mount::before, .mount::after {
+    content: ""; position: absolute; top: 12px; bottom: 12px; width: 7px;
+    background: repeating-linear-gradient(180deg, rgba(10, 13, 19, 0.95) 0 8px, transparent 8px 22px);
+    border-radius: 2px; opacity: 0.75;
+  }
+  .mount::before { left: 6px; } .mount::after { right: 6px; }
+  .mount img { display: block; width: 100%; height: auto; border-radius: 3px; }
+
+  /* ── 区块通用 ── */
+  .sec { position: relative; }
+  .sec .wrap { max-width: 1120px; margin: 0 auto; padding: clamp(78px, 10vw, 132px) clamp(20px, 4vw, 44px) 0; scroll-margin-top: 70px; }
+  .s-head { display: flex; flex-direction: column; gap: 16px; margin-bottom: clamp(36px, 5vw, 56px); }
+  .s-label {
+    display: flex; align-items: center; gap: 16px;
+    font-family: var(--disp); font-size: 0.78rem; letter-spacing: 0.16em;
+    color: var(--text-3);
+  }
+  .s-label::after { content: ""; height: 1px; flex: 1; background: var(--line); }
+  h2 { font-size: clamp(1.75rem, 3.2vw, 2.5rem); font-weight: 700; letter-spacing: -0.01em; line-height: 1.3; text-wrap: balance; }
+
+  /* 概览 */
+  .lede { font-size: clamp(1.32rem, 2.3vw, 1.85rem); font-weight: 450; line-height: 1.8; max-width: 26em; text-wrap: pretty; }
+  .intro-p { margin-top: 22px; color: var(--text-2); max-width: 40em; }
+  .stats {
+    margin-top: clamp(38px, 5vw, 54px);
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    border-block: 1px solid var(--line);
+  }
+  .stat { padding: 24px 28px; border-left: 1px solid var(--line); }
+  .stat:first-child { border-left: 0; padding-left: 0; }
+  .stat b { display: block; font-size: 1.75rem; font-weight: 700; letter-spacing: -0.01em; font-variant-numeric: tabular-nums; }
+  .stat span { display: block; margin-top: 6px; font-family: var(--disp); font-size: 0.76rem; letter-spacing: 0.06em; color: var(--text-3); }
+
+  /* 特性台账行 */
+  .ledger { border-top: 1px solid var(--line); }
+  .row {
+    display: grid; grid-template-columns: 118px minmax(0, 1fr); gap: 24px;
+    padding: 27px 0; border-bottom: 1px solid var(--line);
+    transition: background-color 0.25s ease;
+  }
+  .row:hover { background: rgba(255, 255, 255, 0.018); }
+  .tag { font-family: var(--disp); font-size: 0.76rem; letter-spacing: 0.12em; color: var(--text-3); padding-top: 6px; text-transform: uppercase; }
+  .row h3 { font-size: 1.08rem; font-weight: 640; margin-bottom: 8px; }
+  .row p { color: var(--text-2); font-size: 0.95rem; line-height: 1.9; max-width: 66ch; }
+  .row .mini { display: block; margin-top: 16px; width: min(250px, 100%); height: auto; border: 1px solid var(--line); border-radius: 6px; }
+
+  /* 底片展示带:左右两角浮着水月贴纸(白描边已烘焙进 PNG),帧图点击放大。
+     贴纸一半挂出带外,上下的段落间距即为挂出部分预留——帧图行不会被贴纸压到 */
+  .band { position: relative; margin-top: clamp(110px, 12vw, 150px); background: #0d1119; border-block: 1px solid var(--line); padding: 22px 0; scroll-margin-top: 84px; }
+  .band .holes { height: 22px; margin: 0 16px; background: repeating-linear-gradient(90deg, rgba(10, 13, 19, 0.9) 0 15px, transparent 15px 39px); }
+  .fl-icon {
+    position: absolute; z-index: 2;
+    width: var(--fls, 192px); height: var(--fls, 192px);
+    pointer-events: none; filter: drop-shadow(0 14px 26px rgba(3, 5, 9, 0.55));
+  }
+  .fl-icon.tl { top: -132px; left: 28px; transform-origin: 62% 88%; animation: sway-tl 5.4s ease-in-out infinite; }
+  .fl-icon.br { bottom: -140px; right: 28px; transform-origin: 38% 12%; animation: sway-br 6.6s ease-in-out 1.3s infinite; }
+  /* 摇摆钉在角上的贴纸:带一点常驻歪斜,摇到中间顺势上浮 */
+  @keyframes sway-tl { 0%, 100% { transform: rotate(-3deg) translateY(0); } 50% { transform: rotate(3.5deg) translateY(-9px); } }
+  @keyframes sway-br { 0%, 100% { transform: rotate(3deg) translateY(0); } 50% { transform: rotate(-3.5deg) translateY(-9px); } }
+  /* 宽屏:帧图行两侧留白足够,贴纸完整落进留白、贴住行的左上/右下,不再骑带缘。
+     帧图行总宽 1156px 居中,行左缘 = 50% - 578px;贴纸与帧图保持 28px 间隙 */
+  @media (min-width: 1430px) {
+    .band { --fls: 96px; }
+    .fl-icon.tl { top: calc(50% - 288px); bottom: auto; left: calc(50% - 606px - var(--fls)); }
+    .fl-icon.br { top: calc(50% + 152px); bottom: auto; right: calc(50% - 606px - var(--fls)); }
+  }
+  @media (min-width: 1520px) { .band { --fls: 128px; } }
+  @media (min-width: 1628px) { .band { --fls: 192px; } }
+  .frames { display: flex; justify-content: center; gap: 26px; padding: 24px clamp(18px, 3vw, 40px); }
+  .frame {
+    width: min(368px, 86vw); flex: none;
+    background: #0b0f16; border: 1px solid var(--line); border-radius: 4px; padding: 10px;
+    transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+  }
+  .frame:hover { transform: translateY(-6px); border-color: var(--line-2); box-shadow: 0 26px 52px rgba(3, 5, 9, 0.55); }
+  .frame-zoom {
+    display: block; width: 100%; padding: 0; border: 0; background: none;
+    cursor: zoom-in; border-radius: 2px; touch-action: manipulation;
+  }
+  .frame-zoom img { display: block; width: 100%; height: auto; border-radius: 2px; }
+  .frame figcaption {
+    display: flex; justify-content: space-between; align-items: baseline; gap: 10px;
+    padding: 10px 3px 3px;
+    font-family: var(--sans); font-size: 0.8rem; color: var(--text-3);
+  }
+  .frame figcaption span:last-child { font-family: var(--disp); font-size: 0.72rem; letter-spacing: 0.1em; }
+  .frame .live { color: var(--amber); }
+  .band-note { margin-top: 20px; padding-inline: 236px; text-align: center; font-family: var(--sans); font-size: 0.86rem; color: var(--text-2); }
+
+  /* 灯箱:点击帧图放大查看 */
+  .lightbox {
+    position: fixed; inset: 0; z-index: 60;
+    display: flex; align-items: center; justify-content: center; padding: 4vmin;
+    background: rgba(5, 7, 11, 0.84);
+    backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+    overscroll-behavior: contain;
+  }
+  .lightbox[hidden] { display: none; }
+  .lightbox figure { display: flex; flex-direction: column; gap: 12px; max-width: min(620px, 94vw); }
+  .lightbox img {
+    display: block; margin: 0 auto; max-width: 100%; max-height: calc(94svh - 64px);
+    border: 1px solid var(--line-2); border-radius: 6px;
+    box-shadow: 0 40px 90px rgba(0, 0, 0, 0.6);
+  }
+  .lightbox figcaption { text-align: center; font-size: 0.9rem; color: var(--text-2); }
+  .lb-x {
+    position: absolute; top: 16px; right: 20px;
+    width: 42px; height: 42px; border-radius: 50%;
+    border: 1px solid var(--line-2); background: rgba(15, 19, 28, 0.8);
+    color: var(--text); font-size: 1.15rem; line-height: 1; cursor: pointer; touch-action: manipulation;
+    transition: border-color 0.2s ease, color 0.2s ease;
+  }
+  .lb-x:hover { border-color: var(--text-3); }
+  html.lb-lock { overflow: hidden; }
+
+  /* 数据阶梯 */
+  .privacy {
+    margin-top: 36px; padding: 20px 24px;
+    border: 1px solid var(--line); border-radius: 8px;
+    color: var(--text-2); font-size: 0.95rem; max-width: 62em;
+  }
+
+  /* 官方渠道告示 */
+  .notice-wrap { max-width: 1120px; margin: 0 auto; padding: clamp(96px, 11vw, 150px) clamp(20px, 4vw, 44px) 0; }
+  .notice {
+    border: 1px solid rgba(226, 176, 74, 0.35); background: rgba(226, 176, 74, 0.05);
+    border-radius: 10px; padding: 24px 28px;
+  }
+  .notice h3 { font-size: 1.02rem; font-weight: 650; margin-bottom: 12px; }
+  .notice ul { list-style: none; }
+  .notice li { position: relative; padding-left: 1.2em; color: var(--text-2); font-size: 0.92rem; margin: 7px 0; }
+  .notice li::before { content: "•"; position: absolute; left: 0.35em; color: var(--amber); }
+  .notice code { display: inline-block; max-width: 100%; overflow-x: auto; vertical-align: bottom; }
+
+  /* 开源 */
+  .split { display: grid; grid-template-columns: 1.08fr 0.92fr; gap: clamp(34px, 5vw, 76px); align-items: start; }
+  .split p { color: var(--text-2); font-size: 0.97rem; margin-top: 18px; max-width: 40em; }
+  .split p:first-of-type { margin-top: 0; }
+  .stack { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 26px; }
+  .stack span {
+    font-family: var(--disp); font-size: 0.72rem; letter-spacing: 0.1em;
+    color: var(--text-3); border: 1px solid var(--line); border-radius: 999px; padding: 6px 14px;
+  }
+  .links { border-top: 1px solid var(--line); }
+  .links a {
+    display: flex; justify-content: space-between; align-items: baseline; gap: 16px;
+    padding: 16px 2px; border-bottom: 1px solid var(--line);
+    color: var(--text-2); transition: color 0.2s ease;
+    touch-action: manipulation;
+  }
+  .links a:hover { color: var(--text); }
+  .links a:hover .arr { transform: translateX(3px); }
+  .links .arr { color: var(--text-3); transition: transform 0.2s ease; }
+
+  /* 终幕 CTA */
+  .finale { text-align: center; padding-bottom: clamp(90px, 12vw, 150px); }
+  .finale .wrap { padding-bottom: 0; }
+  .finale h2 { font-size: clamp(1.9rem, 3.8vw, 2.9rem); }
+  .finale .fp { margin-top: 16px; color: var(--text-2); }
+  .finale .cta { justify-content: center; margin-top: 34px; }
+  .finale .echo { margin-top: 30px; color: var(--text-3); font-size: 0.9rem; letter-spacing: 0.06em; }
+
+  /* 页脚 */
+  .footer { position: relative; z-index: 2; border-top: 1px solid var(--line); background: rgba(10, 13, 19, 0.55); }
+  .footer .wrap { max-width: 1120px; margin: 0 auto; padding: clamp(44px, 6vw, 64px) clamp(20px, 4vw, 44px) 0; }
+  .fgrid { display: grid; grid-template-columns: 1.2fr 1fr 0.8fr; gap: clamp(28px, 4vw, 56px); padding-bottom: clamp(36px, 5vw, 52px); }
+  .fbrand { display: flex; align-items: center; gap: 10px; font-family: var(--disp); font-weight: 650; }
+  .fbrand img { width: 22px; height: 22px; }
+  .fbrand .cn { color: var(--text-3); font-weight: 450; font-size: 0.82rem; }
+  .fcol p { color: var(--text-3); font-size: 0.85rem; line-height: 1.9; margin-top: 12px; max-width: 30em; }
+  .fcol h4 { font-family: var(--disp); font-size: 0.74rem; letter-spacing: 0.12em; color: var(--text-3); font-weight: 500; }
+  .fcol a { display: block; color: var(--text-2); font-size: 0.88rem; margin-top: 10px; transition: color 0.2s ease; touch-action: manipulation; }
+  .fcol a:hover { color: var(--text); }
+  .edge-row {
+    border-top: 1px solid var(--line);
+    display: flex; justify-content: space-between; gap: 14px; flex-wrap: wrap;
+    padding: 15px 0 17px;
+    font-family: var(--disp); font-size: 0.72rem; letter-spacing: 0.1em; color: var(--text-3);
+  }
+
+  /* 显影入场:一次性、克制 */
+  .reveal { opacity: 0; transform: translateY(14px); transition: opacity 0.6s cubic-bezier(0.2, 0.6, 0.2, 1), transform 0.6s cubic-bezier(0.2, 0.6, 0.2, 1); }
+  .reveal.in { opacity: 1; transform: none; }
+
+  /* ── 响应式 ── */
+  @media (max-width: 1019px) {
+    .hero { grid-template-columns: 1fr; min-height: auto; padding-top: 118px; gap: 52px; }
+    .hero-visual { order: 2; }
+    .mount { transform: none; }
+    .split { grid-template-columns: 1fr; }
+    .fl-icon { width: 128px; height: 128px; }
+    .fl-icon.tl { top: -68px; left: 20px; }
+    .fl-icon.br { bottom: -74px; right: 20px; }
+    .band-note { padding-inline: 168px; }
+  }
+  @media (max-width: 860px) {
+    .stats { grid-template-columns: repeat(2, 1fr); }
+    .stat { padding: 20px 22px; }
+    .stat:nth-child(odd) { border-left: 0; padding-left: 0; }
+    .stat:nth-child(n + 3) { border-top: 1px solid var(--line); }
+    .frames { justify-content: flex-start; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; }
+    .frames::-webkit-scrollbar { display: none; }
+    .frame { scroll-snap-align: center; }
+    .fgrid { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 760px) {
+    .nav-links { display: none; }
+    .brand .cn { display: none; }
+    .row { grid-template-columns: 1fr; gap: 8px; padding: 22px 0; }
+    .hero .t2 { letter-spacing: 0.2em; }
+    .fl-icon { width: 128px; height: 128px; }
+    .fl-icon.tl { top: -88px; left: 12px; }
+    .fl-icon.br { bottom: -44px; right: 12px; }
+    .band { padding-bottom: 140px; } /* 给右下贴纸留出落在带内的落位,避免压到帧图与说明行 */
+    .band-note { padding-left: 18px; padding-right: 150px; }
+  }
+  @media (max-width: 480px) {
+    .btn { width: 100%; justify-content: center; }
+    .cta .tlink { width: 100%; text-align: center; }
+  }
+
+  /* ── 减少动态效果:底片静止,其余照常可读 ── */
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    .vhsbg .film, .vhsbg .run { animation: none; }
+    .reveal { opacity: 1; transform: none; transition: none; }
+    .btn:hover, .frame:hover { transform: none; }
+    .fl-icon { animation: none; }
+  }
+</style>
+</head>
+<body>
+
+<a class="skip" href="#main" data-i18n="skip">跳到主要内容</a>
+<noscript><style>.reveal { opacity: 1; transform: none; }</style></noscript>
+
+<div class="vhsbg" aria-hidden="true"><div class="deck"></div></div>
+<div class="veil" aria-hidden="true"></div>
+
+<header class="nav">
+  <a class="brand" href="#main"><img src="./icon-64.png" alt="" width="24" height="24"><span translate="no">RainyWatch</span><span class="cn" data-i18n="brand.cn">小暴雨助手</span></a>
+  <nav class="nav-links" aria-label="Sections">
+    <a href="#features" data-i18n="nav.features">特性</a>
+    <a href="#showcase" data-i18n="nav.showcase">界面</a>
+    <a href="#data" data-i18n="nav.data">数据</a>
+    <a href="#opensource" data-i18n="nav.oss">开源</a>
+  </nav>
+  <div class="nav-actions">
+    <button type="button" class="lang" id="lang" aria-label="切换语言 / Switch language">EN</button>
+    <a class="gh" href="https://github.com/likeravine233/RainyWatch" rel="noopener">
+      <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/></svg>
+      GitHub
+    </a>
+  </div>
+</header>
+
+<main id="main">
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-copy">
+      <span class="chip"><span class="dot" aria-hidden="true"></span><span data-i18n="hero.chip">开源 · Windows 桌面小组件</span></span>
+      <h1>
+        <span class="t1" translate="no">RainyWatch</span>
+        <span class="t2" data-i18n="hero.t2">小暴雨助手</span>
+      </h1>
+      <div class="rule" aria-hidden="true"></div>
+      <p class="couplet" data-i18n="hero.couplet">“愿虹光永驻天空,也愿有冷雨落下。”</p>
+      <p class="pos" data-i18n="hero.pos">常驻桌面的 CS2 赛况小组件:谁在打、比分多少、下一场几点,一瞥即知。</p>
+      <p class="sub" data-i18n="hero.sub">免安装单文件,双击即用;默认数据来自 Liquipedia 公开接口,无需注册任何账号。</p>
+      <div class="cta">
+        <a class="btn btn-primary" href="https://github.com/likeravine233/RainyWatch/releases" rel="noopener" data-i18n="hero.cta1">下载 Windows 版</a>
+        <a class="btn btn-ghost" href="https://github.com/likeravine233/RainyWatch" rel="noopener" data-i18n="hero.cta2">查看源码</a>
+        <a class="tlink" href="https://github.com/likeravine233/RainyWatch#readme" rel="noopener" data-i18n="hero.docs">完整文档 →</a>
+      </div>
+      <p class="meta" data-i18n="hero.meta">Windows 10 / 11 · 免安装 · AGPL-3.0 · v0.0.1</p>
+    </div>
+    <div class="hero-visual">
+      <figure class="mount">
+        <img src="./shots/versus.png" alt="队色对撞主题的 RainyWatch 主界面:直播主卡回合比分与比赛列表" width="440" height="830" fetchpriority="high">
+      </figure>
+    </div>
+  </section>
+
+  <!-- 概览 -->
+  <section class="sec" id="intro">
+    <div class="wrap">
+      <div class="s-head reveal">
+        <span class="s-label" data-i18n="intro.label">概览 · Overview</span>
+        <h2 data-i18n="intro.h2">一瞥,即知。</h2>
+      </div>
+      <p class="lede reveal" data-i18n="intro.lede">RainyWatch 挂在桌面角落:现在谁在打、比分多少、下一场几点、最近谁赢了、阵容有什么变动——不用切窗口,扫一眼就知道。</p>
+      <p class="intro-p reveal" data-i18n="intro.p">界面提供中文 / English 双语;窗口可置顶、可用图钉钉在桌面、可缩成一条比分胶囊,关闭后收进托盘常驻。</p>
+      <div class="stats reveal">
+        <div class="stat"><b>7</b><span data-i18n="stat.themes">套主题 · Themes</span></div>
+        <div class="stat"><b>100+</b><span data-i18n="stat.colors">战队主色 · Team colors</span></div>
+        <div class="stat"><b>2</b><span data-i18n="stat.langs">界面语言 · Languages</span></div>
+        <div class="stat"><b>45d</b><span data-i18n="stat.archive">赛果档案 · Result archive</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 特性 -->
+  <section class="sec" id="features">
+    <div class="wrap">
+      <div class="s-head reveal">
+        <span class="s-label" data-i18n="features.label">特性 · Features</span>
+        <h2 data-i18n="features.h2">为「扫一眼」而生</h2>
+      </div>
+      <div class="ledger">
+        <div class="row reveal">
+          <span class="tag">Live HUD</span>
+          <div>
+            <h3 data-i18n="f1.h">直播主卡</h3>
+            <p data-i18n="f1.p">中央大数字是当前图回合比分,配图序带与系列大比分;手枪局、图点、加时、赛点等阶段标签全部由赛制自动推导;点击比分一键复制。</p>
+          </div>
+        </div>
+        <div class="row reveal">
+          <span class="tag">Follow</span>
+          <div>
+            <h3 data-i18n="f2.h">关注与提醒</h3>
+            <p data-i18n="f2.p">关注队伍与选手,命中比赛整行置顶高亮;开赛前 5 / 10 / 15 / 30 分钟弹系统提醒,关注的比赛结束后推送赛果速报。</p>
+          </div>
+        </div>
+        <div class="row reveal">
+          <span class="tag">Transfers</span>
+          <div>
+            <h3 data-i18n="f3.h">变阵解读</h3>
+            <p data-i18n="f3.p">替补席、租借、擢升一线队、退役……十余种转会动作各配一句话解说;新增变阵挂 NEW 徽章并弹系统通知,国籍以中文显示。</p>
+          </div>
+        </div>
+        <div class="row reveal">
+          <span class="tag">Schedule</span>
+          <div>
+            <h3 data-i18n="f4.h">赛程与赛果</h3>
+            <p data-i18n="f4.p">开赛倒计时随时区自动换算,弃赛场显示 FF / W 旗标;VRS 世界排名徽章与 S / A / B / C 赛事评级一目了然。</p>
+          </div>
+        </div>
+        <div class="row reveal">
+          <span class="tag">Themes</span>
+          <div>
+            <h3 data-i18n="f5.h">七套主题与迷你条</h3>
+            <p data-i18n="f5.p">即点即换,圆形扩散过渡;队色对撞波、底片氛围背景等动效逐项可关;可缩为迷你比分胶囊,双击还原。</p>
+            <img class="mini" src="./shots/tactical-mini.png" alt="迷你模式:一条比分胶囊" width="260" height="160" loading="lazy">
+          </div>
+        </div>
+        <div class="row reveal">
+          <span class="tag">Resident</span>
+          <div>
+            <h3 data-i18n="f6.h">省心常驻</h3>
+            <p data-i18n="f6.p">缓存秒开,Liquipedia 官方 API 合规限速;发现新版本只轻轻提醒;托盘常驻、窗口置顶、鼠标穿透、开机自启一应俱全。</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- 底片展示带 -->
+      <div class="band reveal" id="showcase">
+        <img class="fl-icon tl" src="./band-tl.png" alt="" width="384" height="384" aria-hidden="true">
+        <img class="fl-icon br" src="./band-br.png" alt="" width="384" height="384" aria-hidden="true">
+        <div class="holes" aria-hidden="true"></div>
+        <div class="frames">
+          <figure class="frame">
+            <button type="button" class="frame-zoom" aria-label="放大查看:战术沙盘主题截图">
+              <img src="./shots/tactical.png" alt="战术沙盘主题:回合级比分与图序带" width="440" height="830" loading="lazy">
+            </button>
+            <figcaption><span data-i18n="cap1">战术沙盘 · 演示数据</span><span>DEMO</span></figcaption>
+          </figure>
+          <figure class="frame">
+            <button type="button" class="frame-zoom" aria-label="放大查看:变阵页签截图">
+              <img src="./shots/versus-transfers.png" alt="变阵页签:精确状态标签与一句话解说" width="440" height="830" loading="lazy">
+            </button>
+            <figcaption><span data-i18n="cap2">变阵解说 · 演示数据</span><span>DEMO</span></figcaption>
+          </figure>
+          <figure class="frame">
+            <button type="button" class="frame-zoom" aria-label="放大查看:比赛列表截图">
+              <img src="./shots/recent-live.png" alt="比赛列表:倒计时、弃赛旗标与 VRS 排名徽章" width="440" height="830" loading="lazy">
+            </button>
+            <figcaption><span data-i18n="cap3">比赛列表 · 真实数据</span><span class="live">LIVE</span></figcaption>
+          </figure>
+        </div>
+        <div class="holes" aria-hidden="true"></div>
+      </div>
+      <p class="band-note" data-i18n="showcase.note">除标注「真实数据」外,截图均来自内置演示数据,队伍 / 赛事 / 比分仅为示例。</p>
+    </div>
+  </section>
+
+  <!-- 数据 -->
+  <section class="sec" id="data">
+    <div class="wrap">
+      <div class="s-head reveal">
+        <span class="s-label" data-i18n="data.label">数据 · Data</span>
+        <h2 data-i18n="data.h2">开箱即用,按需增强</h2>
+      </div>
+      <div class="ledger">
+        <div class="row reveal">
+          <span class="tag" data-i18n="d1.tag">默认</span>
+          <div>
+            <h3 data-i18n="d1.h">Liquipedia 公开接口</h3>
+            <p data-i18n="d1.p">零配置:赛程、赛果、图序条、VRS 排名与变阵,装上就有。</p>
+          </div>
+        </div>
+        <div class="row reveal">
+          <span class="tag" data-i18n="d2.tag">增强</span>
+          <div>
+            <h3 data-i18n="d2.h">PandaScore token(免费档)</h3>
+            <p data-i18n="d2.p">在 pandascore.co 免费申请 token 填进设置:直播比赛显示系列大比分与图号,45 秒同步。</p>
+          </div>
+        </div>
+        <div class="row reveal">
+          <span class="tag" data-i18n="d3.tag">进阶</span>
+          <div>
+            <h3 data-i18n="d3.h">PandaScore 付费档</h3>
+            <p data-i18n="d3.p">回合级实时比分进入主卡中央大数字,追分时刻一目了然。</p>
+          </div>
+        </div>
+      </div>
+      <p class="privacy reveal" data-i18n="data.privacy">所有凭证只保存在你自己的电脑上,不经由任何第三方服务器中转;应用不内置任何密钥,完全免费、无广告、无任何商业行为。</p>
+    </div>
+  </section>
+
+  <!-- 官方渠道 -->
+  <div class="notice-wrap">
+    <aside class="notice reveal">
+      <h3 data-i18n="notice.h">⚠️ 认准官方渠道</h3>
+      <ul>
+        <li data-i18n="notice.1">唯一官方下载渠道是本仓库 Releases 页;下载站、网盘、聊天群里的“RainyWatch”安装包均与本项目无关,请勿使用。</li>
+        <li><span data-i18n="notice.2">每个版本附带 SHA256SUMS.txt,以下命令校验一致才是官方原版:</span> <code translate="no">certutil -hashfile RainyWatch-Portable.exe SHA256</code></li>
+        <li data-i18n="notice.3">应用不内置任何密钥:全部凭证由你自己申请、只存在你电脑上,网络访问仅限 Liquipedia / PandaScore / Twitch 等列明的数据源。</li>
+      </ul>
+    </aside>
+  </div>
+
+  <!-- 开源 -->
+  <section class="sec" id="opensource">
+    <div class="wrap">
+      <div class="s-head reveal">
+        <span class="s-label" data-i18n="oss.label">开源 · Open source</span>
+        <h2 data-i18n="oss.h2">一份可以自己编译的代码</h2>
+      </div>
+      <div class="split">
+        <div class="reveal">
+          <p data-i18n="oss.p1">Electron 与原生 JavaScript 构建,不依赖前端框架;koffi 提供全局热键等系统能力。仓库同时收录离线开发工具与打包脚本,从克隆到产出便携版 exe 一条命令。</p>
+          <p data-i18n="oss.p2">AGPL-3.0 许可,欢迎批评、Issue 与 PR;衍生与服务化需同样开源。</p>
+          <div class="stack" aria-hidden="true">
+            <span>ELECTRON</span><span>NODE</span><span>KOFFI</span><span>VANILLA JS</span><span>AGPL-3.0</span>
+          </div>
+        </div>
+        <div class="links reveal">
+          <a href="https://github.com/likeravine233/RainyWatch" rel="noopener"><span data-i18n="l1">GitHub 仓库</span><span class="arr" aria-hidden="true">↗</span></a>
+          <a href="https://github.com/likeravine233/RainyWatch#readme" rel="noopener"><span data-i18n="l2">双语文档 README</span><span class="arr" aria-hidden="true">↗</span></a>
+          <a href="https://github.com/likeravine233/RainyWatch/releases" rel="noopener"><span data-i18n="l3">Releases 下载</span><span class="arr" aria-hidden="true">↗</span></a>
+          <a href="https://github.com/likeravine233/RainyWatch/issues" rel="noopener"><span data-i18n="l4">Issues 反馈</span><span class="arr" aria-hidden="true">↗</span></a>
+          <a href="https://github.com/likeravine233/RainyWatch/blob/main/LICENSE" rel="noopener"><span data-i18n="l5">AGPL-3.0 许可证</span><span class="arr" aria-hidden="true">↗</span></a>
+          <a href="https://github.com/likeravine233/RainyWatch#-%E6%94%AF%E6%8C%81%E5%BC%80%E5%8F%91%E8%80%85" rel="noopener"><span data-i18n="l6">请作者喝杯咖啡</span><span class="arr" aria-hidden="true">↗</span></a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 终幕 -->
+  <section class="sec finale">
+    <div class="wrap reveal">
+      <h2 data-i18n="finale.h2">把赛况放回桌面角落。</h2>
+      <p class="fp" data-i18n="finale.p">免安装、免费、无广告——下载后双击,几秒后出数据。</p>
+      <div class="cta">
+        <a class="btn btn-primary" href="https://github.com/likeravine233/RainyWatch/releases" rel="noopener" data-i18n="hero.cta1">下载 Windows 版</a>
+        <a class="btn btn-ghost" href="https://github.com/likeravine233/RainyWatch" rel="noopener" data-i18n="hero.cta2">查看源码</a>
+      </div>
+      <p class="echo" data-i18n="finale.echo">愿虹光永驻天空,也愿有冷雨落下。</p>
+    </div>
+  </section>
+
+</main>
+
+<footer class="footer">
+  <div class="wrap">
+    <div class="fgrid">
+      <div class="fcol">
+        <div class="fbrand"><img src="./icon-64.png" alt="" width="22" height="22"><span translate="no">RainyWatch</span><span class="cn" data-i18n="brand.cn">小暴雨助手</span></div>
+        <p data-i18n="footer.about">常驻桌面的 CS2 赛况小组件,一瞥即知。应用本体请从 Releases 获取。</p>
+      </div>
+      <div class="fcol">
+        <h4 data-i18n="footer.srcH">数据来源</h4>
+        <p><a href="https://liquipedia.net/counterstrike" rel="noopener" style="display:inline">Liquipedia</a>(CC BY-SA 3.0 · <span data-i18n="footer.lp">经官方 API 访问</span>) · <a href="https://pandascore.co" rel="noopener" style="display:inline">PandaScore</a>(<span data-i18n="footer.ps">可选增强,用户自备 token</span>)</p>
+        <p data-i18n="footer.legal">独立个人开发作品,不隶属于任何组织或公司;第三方名称与商标仅用于说明数据来源。</p>
+      </div>
+      <div class="fcol">
+        <h4 data-i18n="footer.linksH">链接</h4>
+        <a href="https://github.com/likeravine233/RainyWatch/releases" rel="noopener">Releases</a>
+        <a href="https://github.com/likeravine233/RainyWatch/issues" rel="noopener">Issues</a>
+        <a href="https://github.com/likeravine233/RainyWatch#readme" rel="noopener">README</a>
+        <a href="https://github.com/likeravine233/RainyWatch/blob/main/LICENSE" rel="noopener">License</a>
+        <a href="https://github.com/likeravine233/RainyWatch#-%E6%94%AF%E6%8C%81%E5%BC%80%E5%8F%91%E8%80%85" rel="noopener"><span data-i18n="footer.sponsor">请作者喝杯咖啡</span></a>
+      </div>
+    </div>
+    <div class="edge-row">
+      <span>© 2026 RAINYWATCH</span>
+      <span translate="no">AGPL-3.0</span>
+    </div>
+  </div>
+</footer>
+
+<!-- 灯箱:截图放大查看 -->
+<div class="lightbox" id="lb" role="dialog" aria-modal="true" aria-label="截图放大查看 / Screenshot preview" hidden>
+  <button type="button" class="lb-x" id="lb-x" aria-label="关闭 / Close">✕</button>
+  <figure>
+    <img id="lb-img" alt="">
+    <figcaption id="lb-cap"></figcaption>
+  </figure>
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  // 底片背景建条:与应用 renderer 的 vhsBuild 同款公式 —— 尺寸盖满视口再留 15% 余量,
+  // 条数按宽推导(搬常量不搬条数);每条带独立时长系数(0.85~1.24),相位按序号均布一整个
+  // 周期 —— 页面一打开各条带就带着相互错开的进度,永不齐步
+  (function () {
+    var root = document.querySelector('.vhsbg');
+    if (!root) return;
+    var deck = root.querySelector('.deck');
+    function num(cs, p) { return parseFloat(cs.getPropertyValue(p)) || 0; }
+    function build() {
+      var cs = getComputedStyle(root);
+      var bw = num(cs, '--bw'), tile = num(cs, '--tile'), dur = num(cs, '--dur'), gap = num(cs, '--gap'), ik = num(cs, '--ik') || 40;
+      var rad = Math.abs(num(cs, '--ang')) * Math.PI / 180;
+      var W = (root.clientWidth * Math.cos(rad) + root.clientHeight * Math.sin(rad)) * 1.15;
+      var L = (root.clientWidth * Math.sin(rad) + root.clientHeight * Math.cos(rad)) * 1.15;
+      deck.style.width = W + 'px';
+      deck.style.height = L + 'px';
+      var n = Math.max(3, Math.floor((W + gap) / (bw + gap)));
+      deck.textContent = '';
+      for (var i = 0; i < n; i++) {
+        var r = document.createElement('div');
+        r.className = 'ribbon ' + (i % 2 ? 'p' : 'f');
+        var f = document.createElement('div');
+        f.className = 'film';
+        var factor = 0.85 + ((i * 37) % 40) / 100;
+        f.style.animationDuration = (dur * factor).toFixed(2) + 's';
+        f.style.animationDelay = (-(i / n) * dur * factor).toFixed(2) + 's';
+        if (i % 2 === 0) {
+          var count = Math.ceil((L + 2 * tile) / tile) + 1;
+          for (var k = 0; k < count; k++) {
+            var d = document.createElement('div');
+            d.className = 'frm';
+            d.style.top = (k * tile + tile * 0.07) + 'px';
+            f.appendChild(d);
+          }
+        } else {
+          var run = document.createElement('div');
+          run.className = 'run';
+          run.style.animationDelay = (-(i / n) * dur * ik).toFixed(2) + 's'; // 刻字在自身周期上同样按序号错开
+          for (var j = 0; j < 6; j++) {
+            var t = document.createElement('b');
+            t.textContent = '///RAINYWATCH///';
+            run.appendChild(t);
+          }
+          f.appendChild(run);
+        }
+        r.appendChild(f);
+        deck.appendChild(r);
+      }
+    }
+    build();
+    window.addEventListener('resize', build);
+  })();
+
+  var D = {
+    en: {
+      'title': 'RainyWatch — a CS2 match widget for your desktop',
+      'skip': 'Skip to content',
+      'brand.cn': 'CS2 match widget',
+      'nav.features': 'Features', 'nav.showcase': 'Screenshots', 'nav.data': 'Data', 'nav.oss': 'Open source',
+      'hero.chip': 'Open source · Windows desktop widget',
+      'hero.t2': 'CS2 MATCH WIDGET',
+      'hero.couplet': '“Long may rainbows adorn the sky — and let it rain cold on thee.”',
+      'hero.pos': 'Live scores, countdowns, results and roster moves — pinned to a corner of your desktop, readable at a glance.',
+      'hero.sub': 'A single portable executable, no installation. Data comes from Liquipedia\u2019s public API out of the box — no account required.',
+      'hero.cta1': 'Download for Windows', 'hero.cta2': 'View source', 'hero.docs': 'Full documentation →',
+      'hero.meta': 'Windows 10 / 11 · Portable · AGPL-3.0 · v0.0.1',
+      'intro.label': 'Overview', 'intro.h2': 'Glance, and you know.',
+      'intro.lede': 'RainyWatch lives in a corner of your desktop: who is playing, the live score, when the next match starts, who just won, who moved where — no alt-tabbing, one glance is enough.',
+      'intro.p': 'The UI speaks Chinese and English; keep it always-on-top, tack it to the desktop with the pin, shrink it to a score capsule, or tuck it into the tray.',
+      'stat.themes': 'Themes', 'stat.colors': 'Team colors', 'stat.langs': 'UI languages', 'stat.archive': 'Result archive',
+      'features.label': 'Features', 'features.h2': 'Built for the glance',
+      'f1.h': 'Live match HUD',
+      'f1.p': 'The central number is the current map\u2019s round score, with the veto strip and series score beside it; pistol round, map point, overtime and match point chips are derived from the format automatically — click the score to copy it.',
+      'f2.h': 'Follow & reminders',
+      'f2.p': 'Star teams and players — matching matches are pinned to the top and highlighted; get system reminders 5 / 10 / 15 / 30 minutes before start and a flash report when a followed match ends.',
+      'f3.h': 'Transfer stories',
+      'f3.p': 'Benched, loaned, promoted to the main roster, retired — a dozen-plus roster moves each get a one-line story; new moves raise a NEW badge and a system notification.',
+      'f4.h': 'Schedule & results',
+      'f4.p': 'Countdowns adapt to your timezone automatically, forfeits show FF / W plates, and VRS world-ranking badges plus S / A / B / C tournament tiers read at a glance.',
+      'f5.h': 'Seven themes & mini mode',
+      'f5.p': 'Switch instantly with a circular reveal; clash waves and film-strip ambience can be toggled per effect; shrink to a score capsule and double-click to restore.',
+      'f6.h': 'Quietly resident',
+      'f6.p': 'Cache-first startup, polite rate-limited access to Liquipedia\u2019s official API, gentle update nudges; tray, always-on-top, click-through and autostart included.',
+      'cap1': 'Tactical · demo data', 'cap2': 'Transfers · demo data', 'cap3': 'Match list · live data',
+      'showcase.note': 'Screenshots use built-in demo data unless tagged LIVE — teams, events and scores are samples.',
+      'data.label': 'Data', 'data.h2': 'Works out of the box, boosts when you want',
+      'd1.tag': 'Default', 'd1.h': 'Liquipedia public API',
+      'd1.p': 'Zero setup: schedule, results, veto strips, VRS rankings and transfers from the first launch.',
+      'd2.tag': 'Boost', 'd2.h': 'PandaScore token (free tier)',
+      'd2.p': 'Paste a free token from pandascore.co in Settings: live matches show series score and current map, synced every 45 seconds.',
+      'd3.tag': 'Pro', 'd3.h': 'PandaScore paid tier',
+      'd3.p': 'Round-level live scores land in the hero card\u2019s central digits — every clutch reads at a glance.',
+      'data.privacy': 'All credentials stay on your own machine and never pass through a third-party server; the app embeds no keys and is completely free — no ads, no purchases, no commercial activity.',
+      'notice.h': '⚠️ Get the genuine build',
+      'notice.1': 'The only official download channel is this repository\u2019s Releases page — installers from download sites, cloud drives or chat groups are not this project.',
+      'notice.2': 'Every release ships a SHA256SUMS.txt — this command matching means it\u2019s the genuine build:',
+      'notice.3': 'The app embeds no secrets: credentials are user-supplied, stored locally, and network access goes only to the listed data sources (Liquipedia / PandaScore / Twitch).',
+      'oss.label': 'Open source', 'oss.h2': 'Code you can build yourself',
+      'oss.p1': 'Built on Electron and vanilla JavaScript — no frontend framework; koffi provides native capabilities like the global hotkey. The repo ships the offline dev tools and the packaging script: from clone to portable exe in one command.',
+      'oss.p2': 'AGPL-3.0 licensed — critiques, issues and PRs are welcome; derivatives and hosted services must stay open.',
+      'l1': 'GitHub repository', 'l2': 'Bilingual documentation (README)', 'l3': 'Releases downloads', 'l4': 'Feedback via Issues', 'l5': 'AGPL-3.0 License', 'l6': 'Buy the dev a coffee',
+      'finale.h2': 'Put the scores back in a corner of your desktop.',
+      'finale.p': 'Free, portable, ad-free — download, double-click, data in seconds.',
+      'finale.echo': 'Long may rainbows adorn the sky — and let it rain cold on thee.',
+      'footer.about': 'A CS2 match widget for a corner of your Windows desktop — grab the app from Releases.',
+      'footer.srcH': 'Data sources', 'footer.lp': 'via the official API', 'footer.ps': 'optional boost, bring your own token',
+      'footer.legal': 'An independent personal project, unaffiliated with any organization; third-party names identify data sources only.',
+      'footer.linksH': 'Links', 'footer.sponsor': 'Buy the dev a coffee'
+    }
+  };
+  var btn = document.getElementById('lang');
+  function apply(lang) {
+    var en = lang === 'en';
+    document.documentElement.lang = en ? 'en' : 'zh-CN';
+    document.title = en ? D.en.title : 'RainyWatch · 小暴雨助手 — 常驻桌面的 CS2 赛况小组件';
+    var desc = document.querySelector('meta[name="description"]');
+    if (desc) desc.setAttribute('content', en
+      ? 'RainyWatch: a CS2 match widget pinned to a corner of your Windows desktop. Live scores, countdowns, results and roster moves at a glance. Free and open source.'
+      : 'RainyWatch(小暴雨助手):常驻桌面的 CS2 赛况小组件。直播比分、赛程倒计时、赛果与变阵,一瞥即知。Windows 10/11 免安装单文件,免费开源。');
+    var nodes = document.querySelectorAll('[data-i18n]');
+    for (var i = 0; i < nodes.length; i++) {
+      var k = nodes[i].getAttribute('data-i18n');
+      if (en && Object.prototype.hasOwnProperty.call(D.en, k)) nodes[i].textContent = D.en[k];
+      if (!en) nodes[i].textContent = ZH[k] || nodes[i].textContent;
+    }
+    btn.textContent = en ? '中文' : 'EN';
+    try { localStorage.setItem('rw-lang', lang); } catch (e) { }
+  }
+  var ZH = {};
+  var nodes = document.querySelectorAll('[data-i18n]');
+  for (var i = 0; i < nodes.length; i++) ZH[nodes[i].getAttribute('data-i18n')] = nodes[i].textContent;
+  var saved = 'zh';
+  try { saved = localStorage.getItem('rw-lang') || 'zh'; } catch (e) { }
+  if (/#en\b/i.test(location.hash)) saved = 'en'; // 深链:/#en 直接打开英文版
+  window.addEventListener('hashchange', function () {
+    if (/#en\b/i.test(location.hash) && document.documentElement.lang !== 'en') apply('en');
+  });
+  if (saved === 'en') apply('en');
+  btn.addEventListener('click', function () {
+    apply(document.documentElement.lang === 'en' ? 'zh' : 'en');
+  });
+
+  // 显影入场:进出视口双向触发(滚出去复位,再滚回来会重新显影),尊重 reduced-motion
+  var els = document.querySelectorAll('.reveal');
+  var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (reduced || !('IntersectionObserver' in window)) {
+    for (var j = 0; j < els.length; j++) els[j].classList.add('in');
+  } else {
+    var io = new IntersectionObserver(function (entries) {
+      for (var k = 0; k < entries.length; k++) entries[k].target.classList.toggle('in', entries[k].isIntersecting);
+    }, { threshold: 0.12, rootMargin: '0px 0px -36px 0px' });
+    for (var m = 0; m < els.length; m++) io.observe(els[m]);
+  }
+
+  // 截图集灯箱:点击帧图放大;Esc / ✕ / 点击空白处关闭
+  var lb = document.getElementById('lb');
+  if (lb) {
+    var lbImg = document.getElementById('lb-img');
+    var lbCap = document.getElementById('lb-cap');
+    var lbX = document.getElementById('lb-x');
+    var lbLast = null;
+    var lbOpen = function (btn) {
+      var img = btn.querySelector('img');
+      var cap = btn.parentNode.querySelector('figcaption span');
+      lbImg.src = img.getAttribute('src');
+      lbImg.alt = img.alt;
+      lbCap.textContent = cap ? cap.textContent : '';
+      lbLast = btn;
+      lb.hidden = false;
+      document.documentElement.classList.add('lb-lock');
+      lbX.focus();
+    };
+    var lbClose = function () {
+      lb.hidden = true;
+      document.documentElement.classList.remove('lb-lock');
+      if (lbLast) lbLast.focus();
+    };
+    var zooms = document.querySelectorAll('.frame-zoom');
+    for (var z = 0; z < zooms.length; z++) {
+      zooms[z].addEventListener('click', function () { lbOpen(this); });
+    }
+    lbX.addEventListener('click', lbClose);
+    lb.addEventListener('click', function (e) { if (e.target === lb) lbClose(); });
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !lb.hidden) lbClose(); });
+  }
+})();
+</script>
+</body>
+</html>

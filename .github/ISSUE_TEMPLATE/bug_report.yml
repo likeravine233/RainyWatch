@@ -1,0 +1,35 @@
+name: 数据问题反馈 / Data issue
+description: 比分不准、比赛或赛事缺失、图序缺失等数据类问题 / Wrong scores, missing matches or events, missing map info
+labels: ["data"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        感谢反馈!请尽量填写完整;**推荐从应用内进入**(右键"数据不准?"或设置底部"反馈与支持")——版本、主题等环境信息会自动附上。也可以直接贴主卡与列表的截图。
+        Thanks for the report! **Opening it from inside the app is recommended** — version, theme and other environment info gets attached automatically. Screenshots of the hero card and lists help a lot.
+  - type: dropdown
+    id: issue-type
+    attributes:
+      label: 问题类型 / Issue type
+      options:
+        - 比分或数据不准 / Wrong score or data
+        - VRS 排名不准或过期 / VRS ranking stale or wrong
+        - 比赛或赛事缺失 / Missing match or event
+        - 地图信息缺失 / Missing map info
+        - 通知不工作 / Notifications not working
+        - 其他 / Other
+    validations:
+      required: true
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: 发生了什么 / What happened
+      description: 现象与期望;从应用内跳转时,版本/主题等环境信息会自动附在下方 / What you saw vs. what you expected; environment info is auto-filled below when opened from the app
+      placeholder: "例:主卡显示的比分与直播画面不一致,实际是 12:9…… / e.g. the hero card shows a different score than the stream, it was actually 12:9..."
+    validations:
+      required: true
+  - type: input
+    id: match
+    attributes:
+      label: 相关比赛(可选) / Match (optional)
+      description: 对阵双方与赛事,例:Legacy vs MIBR · 裂变天地 / Teams and event, e.g. Legacy vs MIBR · FISSURE Playground

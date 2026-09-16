@@ -1,0 +1,3330 @@
+{
+  "matches": {
+    "live": [
+      {
+        "id": "NAVI|FaZe|1711891200000",
+        "ts": 1789324280736,
+        "timerText": "March 31, 2024 - 16:00 CET",
+        "status": "live",
+        "score": [
+          1,
+          1
+        ],
+        "format": "BO3",
+        "teamA": {
+          "name": "NAVI",
+          "logo": "https://liquipedia.net/commons/images/thumb/3/3f/Natus_Vincere_2021_lightmode.png/57px-Natus_Vincere_2021_lightmode.png",
+          "href": "https://liquipedia.net/counterstrike/Natus_Vincere",
+          "isWinner": false,
+          "isLoser": false
+        },
+        "teamB": {
+          "name": "FaZe",
+          "logo": "https://liquipedia.net/commons/images/thumb/c/c5/FaZe_Esports_2026_darkmode.png/59px-FaZe_Esports_2026_darkmode.png",
+          "href": "https://liquipedia.net/counterstrike/FaZe_Clan",
+          "isWinner": false,
+          "isLoser": false
+        },
+        "event": "PGL Major Copenhagen 2024",
+        "stage": "Grand Final",
+        "eventHref": "https://liquipedia.net/counterstrike/PGL_Major_Copenhagen_2024",
+        "eventIcon": "https://liquipedia.net/commons/images/thumb/6/6e/PGL_Major_Copenhagen_2024_allmode.png/50px-PGL_Major_Copenhagen_2024_allmode.png",
+        "streams": [
+          "https://www.twitch.tv/esl_csgo"
+        ],
+        "hltv": "https://www.hltv.org/matches/2370727/faze-vs-natus-vincere-pgl-cs2-major-copenhagen-2024",
+        "live2": {
+          "mapNum": 3,
+          "ra": 12,
+          "rb": 3,
+          "maps": [
+            [
+              13,
+              9
+            ],
+            [
+              2,
+              13
+            ]
+          ]
+        }
+      }
+    ],
+    "upcoming": [
+      {
+        "id": "9 Pandas|B8|u1",
+        "ts": 1789344680736,
+        "timerText": "March 31, 2024 - 20:00 CET",
+        "status": "upcoming",
+        "score": [],
+        "format": "BO3",
+        "teamA": {
+          "name": "9 Pandas",
+          "logo": "https://liquipedia.net/commons/images/2/25/9Pandas_allmode.png",
+          "href": "https://liquipedia.net/counterstrike/9%20Pandas",
+          "isWinner": false,
+          "isLoser": false
+        },
+        "teamB": {
+          "name": "B8",
+          "logo": "https://liquipedia.net/commons/images/thumb/a/a6/B8_darkmode.png/42px-B8_darkmode.png",
+          "href": "https://liquipedia.net/counterstrike/B8",
+          "isWinner": false,
+          "isLoser": false
+        },
+        "event": "ESL Challenger League Season 47",
+        "stage": "Europe",
+        "eventHref": "",
+        "eventIcon": "",
+        "streams": [],
+        "hltv": ""
+      },
+      {
+        "id": "SINNERS|Sampi|u2",
+        "ts": 1789355480736,
+        "timerText": "March 31, 2024 - 23:00 CET",
+        "status": "upcoming",
+        "score": [],
+        "format": "BO3",
+        "teamA": {
+          "name": "SINNERS",
+          "logo": "https://liquipedia.net/commons/images/thumb/4/4f/SINNERS_Esports_allmode.png/39px-SINNERS_Esports_allmode.png",
+          "href": "https://liquipedia.net/counterstrike/SINNERS_Esports",
+          "isWinner": false,
+          "isLoser": false
+        },
+        "teamB": {
+          "name": "Sampi",
+          "logo": "https://liquipedia.net/commons/images/thumb/2/2c/Sampi_allmode.png/50px-Sampi_allmode.png",
+          "href": "https://liquipedia.net/counterstrike/Sampi",
+          "isWinner": false,
+          "isLoser": false
+        },
+        "event": "CCT Europe Series #4",
+        "stage": "Group A",
+        "eventHref": "",
+        "eventIcon": "",
+        "streams": [],
+        "hltv": ""
+      },
+      {
+        "id": "Vitality|Spirit|u3",
+        "ts": 1790021480736,
+        "timerText": "April 8, 2024 - 11:00 CST",
+        "status": "upcoming",
+        "score": [],
+        "format": "BO3",
+        "teamA": {
+          "name": "Vitality",
+          "logo": "https://liquipedia.net/commons/images/thumb/9/96/Team_Vitality_2023_darkmode.png/41px-Team_Vitality_2023_darkmode.png",
+          "href": "https://liquipedia.net/counterstrike/Vitality",
+          "isWinner": false,
+          "isLoser": false
+        },
+        "teamB": {
+          "name": "Spirit",
+          "logo": "https://liquipedia.net/commons/images/thumb/8/80/Team_Spirit_2022_darkmode.png/43px-Team_Spirit_2022_darkmode.png",
+          "href": "https://liquipedia.net/counterstrike/Spirit",
+          "isWinner": false,
+          "isLoser": false
+        },
+        "event": "IEM Chengdu 2024",
+        "stage": "Group A",
+        "eventHref": "",
+        "eventIcon": "",
+        "streams": [],
+        "hltv": ""
+      }
+    ],
+    "recent": [
+      {
+        "id": "FaZe|Vitality|s2",
+        "ts": 1789254680736,
+        "timerText": "March 30, 2024 - 19:10 CET",
+        "status": "finished",
+        "score": [
+          2,
+          1
+        ],
+        "format": "BO3",
+        "teamA": {
+          "name": "FaZe",
+          "logo": "https://liquipedia.net/commons/images/thumb/c/c5/FaZe_Esports_2026_darkmode.png/59px-FaZe_Esports_2026_darkmode.png",
+          "href": "https://liquipedia.net/counterstrike/FaZe",
+          "isWinner": true,
+          "isLoser": false
+        },
+        "teamB": {
+          "name": "Vitality",
+          "logo": "https://liquipedia.net/commons/images/thumb/9/96/Team_Vitality_2023_darkmode.png/41px-Team_Vitality_2023_darkmode.png",
+          "href": "https://liquipedia.net/counterstrike/Vitality",
+          "isWinner": false,
+          "isLoser": true
+        },
+        "event": "PGL Major Copenhagen 2024",
+        "stage": "Semifinal",
+        "eventHref": "https://liquipedia.net/counterstrike/PGL_Major_Copenhagen_2024",
+        "eventIcon": "https://liquipedia.net/commons/images/thumb/6/6e/PGL_Major_Copenhagen_2024_allmode.png/50px-PGL_Major_Copenhagen_2024_allmode.png",
+        "streams": [],
+        "hltv": ""
+      },
+      {
+        "id": "NAVI|G2|s1",
+        "ts": 1789243880736,
+        "timerText": "March 30, 2024 - 15:40 CET",
+        "status": "finished",
+        "score": [
+          2,
+          1
+        ],
+        "format": "BO3",
+        "teamA": {
+          "name": "NAVI",
+          "logo": "https://liquipedia.net/commons/images/thumb/3/3f/Natus_Vincere_2021_lightmode.png/57px-Natus_Vincere_2021_lightmode.png",
+          "href": "https://liquipedia.net/counterstrike/Natus_Vincere",
+          "isWinner": true,
+          "isLoser": false
+        },
+        "teamB": {
+          "name": "G2",
+          "logo": "https://liquipedia.net/commons/images/thumb/c/cd/G2_Esports_2019_darkmode.png/44px-G2_Esports_2019_darkmode.png",
+          "href": "https://liquipedia.net/counterstrike/G2_Esports",
+          "isWinner": false,
+          "isLoser": true
+        },
+        "event": "PGL Major Copenhagen 2024",
+        "stage": "Semifinal",
+        "eventHref": "https://liquipedia.net/counterstrike/PGL_Major_Copenhagen_2024",
+        "eventIcon": "https://liquipedia.net/commons/images/thumb/6/6e/PGL_Major_Copenhagen_2024_allmode.png/50px-PGL_Major_Copenhagen_2024_allmode.png",
+        "streams": [],
+        "hltv": ""
+      },
+      {
+        "id": "Monte|SINNERS|ff1",
+        "ts": 1789308680736,
+        "timerText": "March 31, 2024 - 11:00 CET",
+        "status": "finished",
+        "score": [
+          0,
+          0
+        ],
+        "format": "BO3",
+        "teamA": {
+          "name": "Monte",
+          "logo": "https://liquipedia.net/commons/images/thumb/5/54/Monte_allmode.png/50px-Monte_allmode.png",
+          "href": "https://liquipedia.net/counterstrike/Monte",
+          "isWinner": false,
+          "isLoser": false
+        },
+        "teamB": {
+          "name": "SINNERS",
+          "logo": "https://liquipedia.net/commons/images/thumb/4/4f/SINNERS_Esports_allmode.png/39px-SINNERS_Esports_allmode.png",
+          "href": "https://liquipedia.net/counterstrike/SINNERS_Esports",
+          "isWinner": true,
+          "isLoser": false
+        },
+        "event": "ESL Challenger League Season 47",
+        "stage": "Europe",
+        "eventHref": "",
+        "eventIcon": "",
+        "streams": [],
+        "hltv": "",
+        "forfeit": true
+      }
+    ]
+  },
+  "events": {
+    "ongoing": [
+      {
+        "name": "Creator Showdown 2026",
+        "href": "https://liquipedia.net/counterstrike/Creator_Showdown/2026",
+        "icon": "https://liquipedia.net/commons/images/thumb/8/83/Creator_Showdown_allmode.png/50px-Creator_Showdown_allmode.png",
+        "tier": "S",
+        "dates": "Aug 20 – Sep 12"
+      },
+      {
+        "name": "BLAST Open Fall 2026",
+        "href": "https://liquipedia.net/counterstrike/BLAST/Open/2026/Fall",
+        "icon": "https://liquipedia.net/commons/images/thumb/5/5d/BLAST_Open_icon_allmode.png/42px-BLAST_Open_icon_allmode.png",
+        "tier": "S",
+        "dates": "Aug 26 – Sep 06"
+      },
+      {
+        "name": "CCT EU 2026 Series #8",
+        "href": "https://liquipedia.net/counterstrike/CCT/2026/Europe/Series_8",
+        "icon": "https://liquipedia.net/commons/images/thumb/0/05/CCT_2024_Europe_icon_allmode.png/35px-CCT_2024_Europe_icon_allmode.png",
+        "tier": "B",
+        "dates": "Sep 02 – 14"
+      },
+      {
+        "name": "CCT SA 2026 Series #5",
+        "href": "https://liquipedia.net/counterstrike/CCT/2026/South_America/Series_5",
+        "icon": "https://liquipedia.net/commons/images/thumb/c/c8/CCT_2024_South_America_icon_allmode.png/35px-CCT_2024_South_America_icon_allmode.png",
+        "tier": "B",
+        "dates": "Aug 25 – Sep 06"
+      },
+      {
+        "name": "DACH CS Masters Season 6",
+        "href": "https://liquipedia.net/counterstrike/DACH_CS_Masters/Season_6",
+        "icon": "https://liquipedia.net/commons/images/thumb/e/e1/DACH_CS_Masters_icon_darkmode.png/41px-DACH_CS_Masters_icon_darkmode.png",
+        "tier": "C",
+        "dates": "Aug 31 – Dec 12"
+      },
+      {
+        "name": "DACH CS Masters S6: Div. 2",
+        "href": "https://liquipedia.net/counterstrike/DACH_CS_Masters/Season_6/Division_2",
+        "icon": "https://liquipedia.net/commons/images/thumb/e/e1/DACH_CS_Masters_icon_darkmode.png/41px-DACH_CS_Masters_icon_darkmode.png",
+        "tier": "C",
+        "dates": "Sep 05 – Nov 15"
+      },
+      {
+        "name": "DACH CS Masters S6: Div. 3",
+        "href": "https://liquipedia.net/counterstrike/DACH_CS_Masters/Season_6/Division_3",
+        "icon": "https://liquipedia.net/commons/images/thumb/e/e1/DACH_CS_Masters_icon_darkmode.png/41px-DACH_CS_Masters_icon_darkmode.png",
+        "tier": "C",
+        "dates": "Sep 02 – Nov 15"
+      },
+      {
+        "name": "Ibex Gaming League Fall '26",
+        "href": "https://liquipedia.net/counterstrike/Ibex_Gaming_League/2026/Fall",
+        "icon": "https://liquipedia.net/commons/images/thumb/6/6d/Ibex_Gaming_League_2026_icon_darkmode.png/37px-Ibex_Gaming_League_2026_icon_darkmode.png",
+        "tier": "C",
+        "dates": "Aug 17 – Oct 25"
+      },
+      {
+        "name": "CROSSFIRE Season 6",
+        "href": "https://liquipedia.net/counterstrike/CROSSFIRE/Season_6",
+        "icon": "https://liquipedia.net/commons/images/thumb/d/dd/CROSSFIRE_darkmode.png/50px-CROSSFIRE_darkmode.png",
+        "tier": "C",
+        "dates": "Aug 31 – Oct 11"
+      },
+      {
+        "name": "United21 Season 55",
+        "href": "https://liquipedia.net/counterstrike/United21/Season_55",
+        "icon": "https://liquipedia.net/commons/images/thumb/5/5f/United21_icon_allmode.png/50px-United21_icon_allmode.png",
+        "tier": "C",
+        "dates": "Sep 06 – 23"
+      }
+    ],
+    "upcoming": [
+      {
+        "name": "BLAST Rivals Fall 2026",
+        "href": "https://liquipedia.net/counterstrike/BLAST/Rivals/2026/Fall",
+        "icon": "https://liquipedia.net/commons/images/thumb/1/17/BLAST_Rivals_icon_allmode.png/42px-BLAST_Rivals_icon_allmode.png",
+        "tier": "S",
+        "dates": "Nov 11 – 15"
+      },
+      {
+        "name": "IEM Beijing 2026",
+        "href": "https://liquipedia.net/counterstrike/Intel_Extreme_Masters/2026/Beijing",
+        "icon": "https://liquipedia.net/commons/images/thumb/4/4d/Intel_Extreme_Masters_2022_icon_allmode.png/50px-Intel_Extreme_Masters_2022_icon_allmode.png",
+        "tier": "S",
+        "dates": "Nov 02 – 08"
+      },
+      {
+        "name": "PGL Masters Bucharest 2026",
+        "href": "https://liquipedia.net/counterstrike/PGL/2026/Masters",
+        "icon": "https://liquipedia.net/commons/images/thumb/b/b1/PGL_Masters_Bucharest_2026_icon_darkmode.png/50px-PGL_Masters_Bucharest_2026_icon_darkmode.png",
+        "tier": "S",
+        "dates": "Oct 24 – 31"
+      },
+      {
+        "name": "Thunderpick World Champ. '26",
+        "href": "https://liquipedia.net/counterstrike/Thunderpick/World_Championship/2026",
+        "icon": "https://liquipedia.net/commons/images/thumb/1/1f/Thunderpick_World_Championship_2025_icon_darkmode.png/50px-Thunderpick_World_Championship_2025_icon_darkmode.png",
+        "tier": "S",
+        "dates": "Oct 14 – 18"
+      },
+      {
+        "name": "ESL Pro League Season 24",
+        "href": "https://liquipedia.net/counterstrike/ESL/Pro_League/Season_24",
+        "icon": "https://liquipedia.net/commons/images/thumb/1/10/ESL_Pro_League_2019_new_icon.png/50px-ESL_Pro_League_2019_new_icon.png",
+        "tier": "S",
+        "dates": "Oct 03 – 11"
+      },
+      {
+        "name": "SL StarSeries Fall 2026",
+        "href": "https://liquipedia.net/counterstrike/StarLadder/StarSeries/2026/Fall",
+        "icon": "https://liquipedia.net/commons/images/thumb/6/6f/StarLadder_icon_darkmode.png/50px-StarLadder_icon_darkmode.png",
+        "tier": "S",
+        "dates": "Sep 17 – 20"
+      },
+      {
+        "name": "FISSURE Playground #3",
+        "href": "https://liquipedia.net/counterstrike/FISSURE/Playground/3",
+        "icon": "https://liquipedia.net/commons/images/thumb/e/ee/FISSURE_2024_icon_darkmode.png/50px-FISSURE_2024_icon_darkmode.png",
+        "tier": "S",
+        "dates": "Sep 08 – 13"
+      },
+      {
+        "name": "Stake Ranked Episode 6",
+        "href": "https://liquipedia.net/counterstrike/Stake_Ranked/Episode_6",
+        "icon": "https://liquipedia.net/commons/images/thumb/3/32/Stake_icon_darkmode.png/31px-Stake_icon_darkmode.png",
+        "tier": "A",
+        "dates": "Nov 17 – 20"
+      },
+      {
+        "name": "Stake Ranked Episode 5",
+        "href": "https://liquipedia.net/counterstrike/Stake_Ranked/Episode_5",
+        "icon": "https://liquipedia.net/commons/images/thumb/3/32/Stake_icon_darkmode.png/31px-Stake_icon_darkmode.png",
+        "tier": "A",
+        "dates": "Oct 27 – 30"
+      },
+      {
+        "name": "1win Private Club #2",
+        "href": "https://liquipedia.net/counterstrike/1win_Private_Club/2",
+        "icon": "https://liquipedia.net/commons/images/thumb/5/5c/1win_Team_2024_allmode.png/50px-1win_Team_2024_allmode.png",
+        "tier": "A",
+        "dates": "Oct 19 – 22"
+      }
+    ]
+  },
+  "transfers": [
+    {
+      "id": "2026-09-10|znote|~|HEROIC",
+      "date": "2026-09-10",
+      "player": "znote",
+      "playerHref": "",
+      "flag": "Denmark",
+      "direction": "~",
+      "oldTeam": "",
+      "newTeam": "HEROIC",
+      "oldTeamHref": "",
+      "newTeamHref": "https://liquipedia.net/counterstrike/HEROIC",
+      "oldLogo": "",
+      "newLogo": "https://liquipedia.net/commons/images/thumb/0/0d/HEROIC_2024_allmode.png/50px-HEROIC_2024_allmode.png",
+      "note": "Benched",
+      "ref": ""
+    },
+    {
+      "id": "2026-09-09|dav1g|in|Team Falcons",
+      "date": "2026-09-09",
+      "player": "dav1g",
+      "playerHref": "",
+      "flag": "Argentina",
+      "direction": "in",
+      "oldTeam": "9z",
+      "newTeam": "Team Falcons",
+      "oldTeamHref": "",
+      "newTeamHref": "https://liquipedia.net/counterstrike/Team_Falcons",
+      "oldLogo": "",
+      "newLogo": "https://liquipedia.net/commons/images/thumb/8/83/Team_Falcons_2022_allmode.png/50px-Team_Falcons_2022_allmode.png",
+      "note": "Loan",
+      "ref": ""
+    },
+    {
+      "id": "2026-09-09|BorbLingh|out|M80",
+      "date": "2026-09-09",
+      "player": "BorbLingh",
+      "playerHref": "",
+      "flag": "China",
+      "direction": "out",
+      "oldTeam": "M80",
+      "newTeam": "",
+      "oldTeamHref": "https://liquipedia.net/counterstrike/M80",
+      "newTeamHref": "",
+      "oldLogo": "https://liquipedia.net/commons/images/thumb/5/55/M80_2023_allmode.png/50px-M80_2023_allmode.png",
+      "newLogo": "",
+      "note": "",
+      "ref": ""
+    },
+    {
+      "id": "2026-09-08|n1ssim|in|paiN Gaming",
+      "date": "2026-09-08",
+      "player": "n1ssim",
+      "playerHref": "",
+      "flag": "Brazil",
+      "direction": "in",
+      "oldTeam": "paiN Gaming Academy",
+      "newTeam": "paiN Gaming",
+      "oldTeamHref": "",
+      "newTeamHref": "https://liquipedia.net/counterstrike/PaiN_Gaming",
+      "oldLogo": "",
+      "newLogo": "https://liquipedia.net/commons/images/thumb/d/d3/PaiN_Gaming_2023_darkmode.png/75px-PaiN_Gaming_2023_darkmode.png",
+      "note": "",
+      "ref": ""
+    },
+    {
+      "id": "2026-09-08|shizo|~|Team Falcons",
+      "date": "2026-09-08",
+      "player": "shizo",
+      "playerHref": "",
+      "flag": "Russia",
+      "direction": "~",
+      "oldTeam": "",
+      "newTeam": "Team Falcons",
+      "oldTeamHref": "",
+      "newTeamHref": "https://liquipedia.net/counterstrike/Team_Falcons",
+      "oldLogo": "",
+      "newLogo": "https://liquipedia.net/commons/images/thumb/8/83/Team_Falcons_2022_allmode.png/50px-Team_Falcons_2022_allmode.png",
+      "note": "retired",
+      "ref": ""
+    },
+    {
+      "id": "2026-09-07|sjuush|in|NAVI",
+      "date": "2026-09-07",
+      "player": "sjuush",
+      "playerHref": "",
+      "flag": "Denmark",
+      "direction": "in",
+      "oldTeam": "Metizport",
+      "newTeam": "NAVI",
+      "oldTeamHref": "https://liquipedia.net/counterstrike/Metizport",
+      "newTeamHref": "https://liquipedia.net/counterstrike/Natus_Vincere",
+      "oldLogo": "https://liquipedia.net/commons/images/thumb/d/d9/Metizport_2025_allmode.png/50px-Metizport_2025_allmode.png",
+      "newLogo": "https://liquipedia.net/commons/images/thumb/3/3f/Natus_Vincere_2021_lightmode.png/57px-Natus_Vincere_2021_lightmode.png",
+      "note": "",
+      "ref": ""
+    },
+    {
+      "id": "2026-09-07|keegaN|~|NAVI",
+      "date": "2026-09-07",
+      "player": "keegaN",
+      "playerHref": "",
+      "flag": "Ukraine",
+      "direction": "~",
+      "oldTeam": "",
+      "newTeam": "NAVI",
+      "oldTeamHref": "",
+      "newTeamHref": "https://liquipedia.net/counterstrike/Natus_Vincere",
+      "oldLogo": "",
+      "newLogo": "https://liquipedia.net/commons/images/thumb/3/3f/Natus_Vincere_2021_lightmode.png/57px-Natus_Vincere_2021_lightmode.png",
+      "note": "back from bench",
+      "ref": ""
+    },
+    {
+      "id": "2026-09-06|POP0V|in|Metizport",
+      "date": "2026-09-06",
+      "player": "POP0V",
+      "playerHref": "https://liquipedia.net/counterstrike/POP0V",
+      "flag": "Bulgaria",
+      "direction": "in",
+      "oldTeam": "",
+      "newTeam": "Metizport",
+      "oldTeamHref": "",
+      "newTeamHref": "https://liquipedia.net/counterstrike/Metizport",
+      "oldLogo": "",
+      "newLogo": "https://liquipedia.net/commons/images/thumb/d/d9/Metizport_2025_allmode.png/50px-Metizport_2025_allmode.png",
+      "note": "Assistant Coach",
+      "ref": "https://metizport.com/pop0v-takes-over-assistant-coach-position"
+    },
+    {
+      "id": "2026-09-06|k1llo|in|Dynamo Eclot Phoenix",
+      "date": "2026-09-06",
+      "player": "k1llo",
+      "playerHref": "https://liquipedia.net/counterstrike/index.php?title=K1llo&action=edit&redlink=1",
+      "flag": "Slovakia",
+      "direction": "in",
+      "oldTeam": "",
+      "newTeam": "Dynamo Eclot Phoenix",
+      "oldTeamHref": "",
+      "newTeamHref": "https://liquipedia.net/counterstrike/Dynamo_Eclot_Phoenix",
+      "oldLogo": "",
+      "newLogo": "https://liquipedia.net/commons/images/thumb/c/c4/Dynamo_Eclot_allmode.png/61px-Dynamo_Eclot_allmode.png",
+      "note": "Coach",
+      "ref": "https://x.com/dynamoeclot/status/2096592865149223395"
+    },
+    {
+      "id": "2026-09-06|Bay|in|Mindfreak",
+      "date": "2026-09-06",
+      "player": "Bay",
+      "playerHref": "https://liquipedia.net/counterstrike/index.php?title=Bay&action=edit&redlink=1",
+      "flag": "Australia",
+      "direction": "in",
+      "oldTeam": "",
+      "newTeam": "Mindfreak",
+      "oldTeamHref": "",
+      "newTeamHref": "https://liquipedia.net/counterstrike/Mindfreak_(Australian_team)",
+      "oldLogo": "",
+      "newLogo": "https://liquipedia.net/commons/images/thumb/1/10/Mindfreak_allmode.png/37px-Mindfreak_allmode.png",
+      "note": "",
+      "ref": "https://x.com/angelgun666/status/2096324550879494245"
+    },
+    {
+      "id": "2026-09-06|zune|out|Mindfreak",
+      "date": "2026-09-06",
+      "player": "zune",
+      "playerHref": "https://liquipedia.net/counterstrike/Zune",
+      "flag": "Australia",
+      "direction": "out",
+      "oldTeam": "Mindfreak",
+      "newTeam": "",
+      "oldTeamHref": "https://liquipedia.net/counterstrike/Mindfreak_(Australian_team)",
+      "newTeamHref": "",
+      "oldLogo": "https://liquipedia.net/commons/images/thumb/1/10/Mindfreak_allmode.png/37px-Mindfreak_allmode.png",
+      "newLogo": "",
+      "note": "",
+      "ref": "https://x.com/angelgun666/status/2096324550879494245"
+    },
+    {
+      "id": "2026-09-05|tofoo|~|Team Falcons Academy",
+      "date": "2026-09-05",
+      "player": "tofoo",
+      "playerHref": "",
+      "flag": "Denmark",
+      "direction": "~",
+      "oldTeam": "Team Falcons",
+      "newTeam": "Team Falcons Academy",
+      "oldTeamHref": "https://liquipedia.net/counterstrike/Team_Falcons",
+      "newTeamHref": "",
+      "oldLogo": "https://liquipedia.net/commons/images/thumb/8/83/Team_Falcons_2022_allmode.png/50px-Team_Falcons_2022_allmode.png",
+      "newLogo": "",
+      "note": "",
+      "ref": ""
+    },
+    {
+      "id": "2026-09-05|sayN|out|Elusive",
+      "date": "2026-09-05",
+      "player": "sayN",
+      "playerHref": "https://liquipedia.net/counterstrike/index.php?title=SayN&action=edit&redlink=1",
+      "flag": "United States",
+      "direction": "out",
+      "oldTeam": "Elusive",
+      "newTeam": "",
+      "oldTeamHref": "https://liquipedia.net/counterstrike/Elusive_(American_team)",
+      "newTeamHref": "",
+      "oldLogo": "https://liquipedia.net/commons/images/thumb/8/8c/Elusive_allmode.png/50px-Elusive_allmode.png",
+      "newLogo": "",
+      "note": "",
+      "ref": "https://www.dust2.us/news/77571/elusive-seek-two-as-team-loses-vrs-core"
+    },
+    {
+      "id": "2026-09-05|kAlash|in|BASEMENT BOYS",
+      "date": "2026-09-05",
+      "player": "kAlash",
+      "playerHref": "https://liquipedia.net/counterstrike/KAlash",
+      "flag": "Kazakhstan",
+      "direction": "in",
+      "oldTeam": "",
+      "newTeam": "BASEMENT BOYS",
+      "oldTeamHref": "",
+      "newTeamHref": "https://liquipedia.net/counterstrike/BASEMENT_BOYS",
+      "oldLogo": "",
+      "newLogo": "https://liquipedia.net/commons/images/thumb/4/49/BASEMENT_BOYS_darkmode.png/98px-BASEMENT_BOYS_darkmode.png",
+      "note": "",
+      "ref": "https://x.com/BasementBoysCS2/status/2096162778851500499"
+    },
+    {
+      "id": "2026-09-05|fakerealityy|neutral|BASEMENT BOYS",
+      "date": "2026-09-05",
+      "player": "fakerealityy",
+      "playerHref": "https://liquipedia.net/counterstrike/Fakerealityy",
+      "flag": "Ukraine",
+      "direction": "neutral",
+      "oldTeam": "BASEMENT BOYS",
+      "newTeam": "BASEMENT BOYS",
+      "oldTeamHref": "https://liquipedia.net/counterstrike/BASEMENT_BOYS",
+      "newTeamHref": "https://liquipedia.net/counterstrike/BASEMENT_BOYS",
+      "oldLogo": "https://liquipedia.net/commons/images/thumb/4/49/BASEMENT_BOYS_darkmode.png/98px-BASEMENT_BOYS_darkmode.png",
+      "newLogo": "https://liquipedia.net/commons/images/thumb/4/49/BASEMENT_BOYS_darkmode.png/98px-BASEMENT_BOYS_darkmode.png",
+      "note": "Inactive",
+      "ref": "https://x.com/BasementBoysCS2/status/2096162778851500499"
+    },
+    {
+      "id": "2026-09-05|zeak|out|ReThink",
+      "date": "2026-09-05",
+      "player": "zeak",
+      "playerHref": "https://liquipedia.net/counterstrike/Zeak",
+      "flag": "Sweden",
+      "direction": "out",
+      "oldTeam": "ReThink",
+      "newTeam": "",
+      "oldTeamHref": "https://liquipedia.net/counterstrike/ReThink",
+      "newTeamHref": "",
+      "oldLogo": "https://liquipedia.net/commons/images/thumb/e/ec/ReThink_darkmode.png/66px-ReThink_darkmode.png",
+      "newLogo": "",
+      "note": "",
+      "ref": "https://x.com/ReThinkEsports/status/2096319218387963981"
+    },
+    {
+      "id": "2026-09-05|hubi|out|Vandals Clan",
+      "date": "2026-09-05",
+      "player": "hubi",
+      "playerHref": "https://liquipedia.net/counterstrike/index.php?title=Hubi&action=edit&redlink=1",
+      "flag": "Poland",
+      "direction": "out",
+      "oldTeam": "Vandals Clan",
+      "newTeam": "",
+      "oldTeamHref": "https://liquipedia.net/counterstrike/Vandals_Clan",
+      "newTeamHref": "",
+      "oldLogo": "https://liquipedia.net/commons/images/thumb/0/0a/Vandals_Clan_2026_darkmode.png/48px-Vandals_Clan_2026_darkmode.png",
+      "newLogo": "",
+      "note": "",
+      "ref": "https://x.com/hubics2/status/2096355329017536764"
+    },
+    {
+      "id": "2026-09-04|Pala|in|M80",
+      "date": "2026-09-04",
+      "player": "Pala",
+      "playerHref": "",
+      "flag": "United States",
+      "direction": "in",
+      "oldTeam": "",
+      "newTeam": "M80",
+      "oldTeamHref": "",
+      "newTeamHref": "https://liquipedia.net/counterstrike/M80",
+      "oldLogo": "",
+      "newLogo": "https://liquipedia.net/commons/images/thumb/5/55/M80_2023_allmode.png/50px-M80_2023_allmode.png",
+      "note": "Stand-in",
+      "ref": ""
+    },
+    {
+      "id": "2026-09-04|Rkzinho|in|paiN Gaming",
+      "date": "2026-09-04",
+      "player": "Rkzinho",
+      "playerHref": "https://liquipedia.net/counterstrike/index.php?title=Rkzinho&action=edit&redlink=1",
+      "flag": "Brazil",
+      "direction": "in",
+      "oldTeam": "",
+      "newTeam": "paiN Gaming",
+      "oldTeamHref": "",
+      "newTeamHref": "https://liquipedia.net/counterstrike/PaiN_Gaming",
+      "oldLogo": "",
+      "newLogo": "https://liquipedia.net/commons/images/thumb/d/d3/PaiN_Gaming_2023_darkmode.png/75px-PaiN_Gaming_2023_darkmode.png",
+      "note": "",
+      "ref": "https://x.com/paiNGamingBR/status/2095864414708650301"
+    },
+    {
+      "id": "2026-09-04|v$m|neutral|paiN Gaming",
+      "date": "2026-09-04",
+      "player": "v$m",
+      "playerHref": "https://liquipedia.net/counterstrike/V$m",
+      "flag": "Brazil",
+      "direction": "neutral",
+      "oldTeam": "paiN Gaming",
+      "newTeam": "paiN Gaming",
+      "oldTeamHref": "https://liquipedia.net/counterstrike/PaiN_Gaming",
+      "newTeamHref": "https://liquipedia.net/counterstrike/PaiN_Gaming",
+      "oldLogo": "https://liquipedia.net/commons/images/thumb/d/d3/PaiN_Gaming_2023_darkmode.png/75px-PaiN_Gaming_2023_darkmode.png",
+      "newLogo": "https://liquipedia.net/commons/images/thumb/d/d3/PaiN_Gaming_2023_darkmode.png/75px-PaiN_Gaming_2023_darkmode.png",
+      "note": "Inactive",
+      "ref": "https://x.com/paiNGamingBR/status/2095864414708650301"
+    },
+    {
+      "id": "2026-09-04|betinho|in|paiN Gaming",
+      "date": "2026-09-04",
+      "player": "betinho",
+      "playerHref": "https://liquipedia.net/counterstrike/Betinho",
+      "flag": "Brazil",
+      "direction": "in",
+      "oldTeam": "",
+      "newTeam": "paiN Gaming",
+      "oldTeamHref": "",
+      "newTeamHref": "https://liquipedia.net/counterstrike/PaiN_Gaming",
+      "oldLogo": "",
+      "newLogo": "https://liquipedia.net/commons/images/thumb/d/d3/PaiN_Gaming_2023_darkmode.png/75px-PaiN_Gaming_2023_darkmode.png",
+      "note": "Strategic Coach",
+      "ref": "https://x.com/paiNGamingBR/status/2095864414708650301"
+    },
+    {
+      "id": "2026-09-04|Nivera|out|Clutchain",
+      "date": "2026-09-04",
+      "player": "Nivera",
+      "playerHref": "https://liquipedia.net/counterstrike/Nivera",
+      "flag": "Belgium",
+      "direction": "out",
+      "oldTeam": "Clutchain",
+      "newTeam": "",
+      "oldTeamHref": "https://liquipedia.net/counterstrike/Clutchain",
+      "newTeamHref": "",
+      "oldLogo": "https://liquipedia.net/commons/images/thumb/9/97/Clutchain_allmode.png/51px-Clutchain_allmode.png",
+      "newLogo": "",
+      "note": "",
+      "ref": "https://x.com/Nivera__/status/2095964312632185018"
+    },
+    {
+      "id": "2026-09-04|DeeQue|in|MASQ",
+      "date": "2026-09-04",
+      "player": "DeeQue",
+      "playerHref": "https://liquipedia.net/counterstrike/index.php?title=DeeQue&action=edit&redlink=1",
+      "flag": "Denmark",
+      "direction": "in",
+      "oldTeam": "",
+      "newTeam": "MASQ",
+      "oldTeamHref": "",
+      "newTeamHref": "https://liquipedia.net/counterstrike/MASQ",
+      "oldLogo": "",
+      "newLogo": "https://liquipedia.net/commons/images/thumb/8/86/MASQ_allmode.png/37px-MASQ_allmode.png",
+      "note": "",
+      "ref": "https://x.com/MASQ_CS2/status/2095873177398153462"
+    },
+    {
+      "id": "2026-09-03|dvrk|out|regain",
+      "date": "2026-09-03",
+      "player": "dvrk",
+      "playerHref": "https://liquipedia.net/counterstrike/Dvrk",
+      "flag": "United States",
+      "direction": "out",
+      "oldTeam": "regain",
+      "newTeam": "",
+      "oldTeamHref": "https://liquipedia.net/counterstrike/Regain",
+      "newTeamHref": "",
+      "oldLogo": "https://liquipedia.net/commons/images/thumb/8/88/Regain_2025_darkmode.png/39px-Regain_2025_darkmode.png",
+      "newLogo": "",
+      "note": "",
+      "ref": "https://www.dust2.us/news/77511/dvrk-and-h0nest-step-down-from-regain"
+    },
+    {
+      "id": "2026-09-03|duhpe|out|KODEX Esports",
+      "date": "2026-09-03",
+      "player": "duhpe",
+      "playerHref": "https://liquipedia.net/counterstrike/index.php?title=Duhpe&action=edit&redlink=1",
+      "flag": "United States",
+      "direction": "out",
+      "oldTeam": "KODEX Esports",
+      "newTeam": "",
+      "oldTeamHref": "https://liquipedia.net/counterstrike/KODEX_Esports",
+      "newTeamHref": "",
+      "oldLogo": "https://liquipedia.net/commons/images/thumb/4/47/Kodex_Esports_darkmode.png/92px-Kodex_Esports_darkmode.png",
+      "newLogo": "",
+      "note": "",
+      "ref": "https://www.dust2.us/news/77512/duhpe-steps-down-from-kodex-to-focus-on-recovery-after-being-struck-by-drunk-driver-last-week"
+    },
+    {
+      "id": "2026-09-03|levi|out|Imperial Esports",
+      "date": "2026-09-03",
+      "player": "levi",
+      "playerHref": "https://liquipedia.net/counterstrike/Levi_(Brazilian_player)",
+      "flag": "Brazil",
+      "direction": "out",
+      "oldTeam": "Imperial Esports",
+      "newTeam": "",
+      "oldTeamHref": "https://liquipedia.net/counterstrike/Imperial_Esports",
+      "newTeamHref": "",
+      "oldLogo": "https://liquipedia.net/commons/images/thumb/8/82/Imperial_Esports_2025_allmode.png/39px-Imperial_Esports_2025_allmode.png",
+      "newLogo": "",
+      "note": "Inactive",
+      "ref": "https://x.com/imperialesports/status/2095573824754397606"
+    },
+    {
+      "id": "2026-09-03|ph1|neutral|Hunters Rising",
+      "date": "2026-09-03",
+      "player": "ph1",
+      "playerHref": "https://liquipedia.net/counterstrike/index.php?title=Ph1&action=edit&redlink=1",
+      "flag": "Brazil",
+      "direction": "neutral",
+      "oldTeam": "Hunters Rising",
+      "newTeam": "Hunters Rising",
+      "oldTeamHref": "https://liquipedia.net/counterstrike/Hunters_Rising",
+      "newTeamHref": "https://liquipedia.net/counterstrike/Hunters_Rising",
+      "oldLogo": "https://liquipedia.net/commons/images/thumb/4/42/Bounty_Hunters_Esports_darkmode.png/37px-Bounty_Hunters_Esports_darkmode.png",
+      "newLogo": "https://liquipedia.net/commons/images/thumb/4/42/Bounty_Hunters_Esports_darkmode.png/37px-Bounty_Hunters_Esports_darkmode.png",
+      "note": "Inactive",
+      "ref": "https://x.com/bhbountyhunters/status/2095617933913514162"
+    },
+    {
+      "id": "2026-09-03|Cliqq|out|ENCE",
+      "date": "2026-09-03",
+      "player": "Cliqq",
+      "playerHref": "https://liquipedia.net/counterstrike/Cliqq",
+      "flag": "Finland",
+      "direction": "out",
+      "oldTeam": "ENCE",
+      "newTeam": "",
+      "oldTeamHref": "https://liquipedia.net/counterstrike/ENCE",
+      "newTeamHref": "",
+      "oldLogo": "https://liquipedia.net/commons/images/thumb/e/e4/ENCE_2020_allmode.png/50px-ENCE_2020_allmode.png",
+      "newLogo": "",
+      "note": "Inactive",
+      "ref": "https://x.com/ENCE/status/2095512375810039937"
+    },
+    {
+      "id": "2026-09-03|SaMey|out|Walczaki",
+      "date": "2026-09-03",
+      "player": "SaMey",
+      "playerHref": "https://liquipedia.net/counterstrike/SaMey",
+      "flag": "Poland",
+      "direction": "out",
+      "oldTeam": "Walczaki",
+      "newTeam": "",
+      "oldTeamHref": "https://liquipedia.net/counterstrike/Walczaki",
+      "newTeamHref": "",
+      "oldLogo": "https://liquipedia.net/commons/images/thumb/5/51/Walczaki_darkmode.png/97px-Walczaki_darkmode.png",
+      "newLogo": "",
+      "note": "",
+      "ref": "https://x.com/sameycs/status/2095500812994630042"
+    },
+    {
+      "id": "2026-09-03|Piku|in|Forsaken",
+      "date": "2026-09-03",
+      "player": "Piku",
+      "playerHref": "https://liquipedia.net/counterstrike/index.php?title=Piku&action=edit&redlink=1",
+      "flag": "Poland",
+      "direction": "in",
+      "oldTeam": "",
+      "newTeam": "Forsaken",
+      "oldTeamHref": "",
+      "newTeamHref": "https://liquipedia.net/counterstrike/Forsaken_(Polish_team)",
+      "oldLogo": "",
+      "newLogo": "https://liquipedia.net/commons/images/thumb/d/d4/Forsaken_2021_allmode.png/48px-Forsaken_2021_allmode.png",
+      "note": "",
+      "ref": "https://x.com/forsakencs/status/2095461864289275910"
+    },
+    {
+      "id": "2026-09-03|glazeleq|in|Forsaken",
+      "date": "2026-09-03",
+      "player": "glazeleq",
+      "playerHref": "https://liquipedia.net/counterstrike/index.php?title=Glazeleq&action=edit&redlink=1",
+      "flag": "Poland",
+      "direction": "in",
+      "oldTeam": "",
+      "newTeam": "Forsaken",
+      "oldTeamHref": "",
+      "newTeamHref": "https://liquipedia.net/counterstrike/Forsaken_(Polish_team)",
+      "oldLogo": "",
+      "newLogo": "https://liquipedia.net/commons/images/thumb/d/d4/Forsaken_2021_allmode.png/48px-Forsaken_2021_allmode.png",
+      "note": "Coach",
+      "ref": "https://x.com/forsakencs/status/2095461864289275910"
+    }
+  ],
+  "rankings": {
+    "bySlug": {
+      "33": {
+        "rank": 110,
+        "points": 924.6,
+        "region": "EU",
+        "name": "33"
+      },
+      "team_spirit": {
+        "rank": 1,
+        "points": 1987.8,
+        "region": "EU",
+        "name": "Team Spirit"
+      },
+      "team_falcons": {
+        "rank": 2,
+        "points": 1854,
+        "region": "EU",
+        "name": "Team Falcons"
+      },
+      "fut_esports": {
+        "rank": 3,
+        "points": 1846.2,
+        "region": "EU",
+        "name": "FUT Esports"
+      },
+      "mouz": {
+        "rank": 4,
+        "points": 1822.8,
+        "region": "EU",
+        "name": "MOUZ"
+      },
+      "legacy": {
+        "rank": 5,
+        "points": 1796.2,
+        "region": "AM",
+        "name": "Legacy"
+      },
+      "furia": {
+        "rank": 6,
+        "points": 1753.9,
+        "region": "AM",
+        "name": "FURIA"
+      },
+      "team_vitality": {
+        "rank": 7,
+        "points": 1718.2,
+        "region": "EU",
+        "name": "Team Vitality"
+      },
+      "9z_team": {
+        "rank": 8,
+        "points": 1676.9,
+        "region": "AM",
+        "name": "9z Team"
+      },
+      "g2_esports": {
+        "rank": 9,
+        "points": 1655,
+        "region": "EU",
+        "name": "G2 Esports"
+      },
+      "faze_clan": {
+        "rank": 10,
+        "points": 1651.7,
+        "region": "EU",
+        "name": "FaZe Clan"
+      },
+      "natus_vincere": {
+        "rank": 11,
+        "points": 1645,
+        "region": "EU",
+        "name": "Natus Vincere"
+      },
+      "betboom_team": {
+        "rank": 12,
+        "points": 1561.9,
+        "region": "EU",
+        "name": "BetBoom Team"
+      },
+      "big": {
+        "rank": 13,
+        "points": 1558.8,
+        "region": "EU",
+        "name": "BIG"
+      },
+      "aurora_gaming": {
+        "rank": 14,
+        "points": 1547.9,
+        "region": "EU",
+        "name": "Aurora Gaming"
+      },
+      "parivision": {
+        "rank": 15,
+        "points": 1539.6,
+        "region": "EU",
+        "name": "PARIVISION"
+      },
+      "b8": {
+        "rank": 16,
+        "points": 1534.6,
+        "region": "EU",
+        "name": "B8"
+      },
+      "the_mongolz": {
+        "rank": 17,
+        "points": 1525.6,
+        "region": "AS",
+        "name": "The MongolZ"
+      },
+      "astralis": {
+        "rank": 18,
+        "points": 1504.5,
+        "region": "EU",
+        "name": "Astralis"
+      },
+      "team_liquid": {
+        "rank": 19,
+        "points": 1503.8,
+        "region": "AM",
+        "name": "Team Liquid"
+      },
+      "mibr": {
+        "rank": 20,
+        "points": 1500.9,
+        "region": "AM",
+        "name": "MIBR"
+      },
+      "alliance": {
+        "rank": 21,
+        "points": 1472,
+        "region": "EU",
+        "name": "Alliance"
+      },
+      "magic": {
+        "rank": 22,
+        "points": 1460.2,
+        "region": "EU",
+        "name": "magic"
+      },
+      "gamerlegion": {
+        "rank": 23,
+        "points": 1458,
+        "region": "EU",
+        "name": "GamerLegion"
+      },
+      "ic_esports": {
+        "rank": 24,
+        "points": 1442.6,
+        "region": "EU",
+        "name": "IC Esports"
+      },
+      "tyloo": {
+        "rank": 25,
+        "points": 1410.3,
+        "region": "AS",
+        "name": "TYLOO"
+      },
+      "hotu": {
+        "rank": 26,
+        "points": 1407.4,
+        "region": "EU",
+        "name": "HOTU"
+      },
+      "jijiehao": {
+        "rank": 27,
+        "points": 1397.9,
+        "region": "EU",
+        "name": "JiJieHao"
+      },
+      "ninjas_in_pyjamas": {
+        "rank": 28,
+        "points": 1396.2,
+        "region": "EU",
+        "name": "Ninjas in Pyjamas"
+      },
+      "heroic": {
+        "rank": 29,
+        "points": 1392,
+        "region": "EU",
+        "name": "HEROIC"
+      },
+      "100_thieves": {
+        "rank": 30,
+        "points": 1382.1,
+        "region": "EU",
+        "name": "100 Thieves"
+      },
+      "k27": {
+        "rank": 31,
+        "points": 1374.8,
+        "region": "EU",
+        "name": "K27"
+      },
+      "dendele_cs": {
+        "rank": 32,
+        "points": 1364.8,
+        "region": "AM",
+        "name": "DENDELE CS"
+      },
+      "fnatic": {
+        "rank": 33,
+        "points": 1360.7,
+        "region": "EU",
+        "name": "Fnatic"
+      },
+      "lynn_vision_gaming": {
+        "rank": 34,
+        "points": 1354.4,
+        "region": "AS",
+        "name": "Lynn Vision Gaming"
+      },
+      "eyeballers": {
+        "rank": 35,
+        "points": 1351.5,
+        "region": "EU",
+        "name": "EYEBALLERS"
+      },
+      "pain_gaming": {
+        "rank": 36,
+        "points": 1343.9,
+        "region": "AM",
+        "name": "paiN Gaming"
+      },
+      "1w_team": {
+        "rank": 37,
+        "points": 1331.1,
+        "region": "EU",
+        "name": "1w Team"
+      },
+      "virtus.pro": {
+        "rank": 38,
+        "points": 1328.3,
+        "region": "EU",
+        "name": "Virtus.pro"
+      },
+      "bc.game_esports": {
+        "rank": 39,
+        "points": 1324,
+        "region": "EU",
+        "name": "BC.Game Esports"
+      },
+      "betclic_apogee_esports": {
+        "rank": 40,
+        "points": 1304.2,
+        "region": "EU",
+        "name": "Betclic Apogee Esports"
+      },
+      "3dmax": {
+        "rank": 41,
+        "points": 1301.4,
+        "region": "EU",
+        "name": "3DMAX"
+      },
+      "luminosity_gaming": {
+        "rank": 42,
+        "points": 1298.2,
+        "region": "EU",
+        "name": "Luminosity Gaming"
+      },
+      "sashi_esport": {
+        "rank": 43,
+        "points": 1266.2,
+        "region": "EU",
+        "name": "Sashi Esport"
+      },
+      "acend": {
+        "rank": 44,
+        "points": 1259.3,
+        "region": "EU",
+        "name": "Acend"
+      },
+      "team_nemesis": {
+        "rank": 45,
+        "points": 1256.8,
+        "region": "EU",
+        "name": "Team Nemesis"
+      },
+      "nuclear_tigeres": {
+        "rank": 46,
+        "points": 1244.4,
+        "region": "EU",
+        "name": "Nuclear TigeRES"
+      },
+      "echo": {
+        "rank": 47,
+        "points": 1226.6,
+        "region": "EU",
+        "name": "Echo"
+      },
+      "infinite": {
+        "rank": 48,
+        "points": 1220.4,
+        "region": "EU",
+        "name": "INFINITE"
+      },
+      "nrg": {
+        "rank": 49,
+        "points": 1218.9,
+        "region": "AM",
+        "name": "NRG"
+      },
+      "fokus": {
+        "rank": 50,
+        "points": 1215.2,
+        "region": "EU",
+        "name": "FOKUS"
+      },
+      "flyquest": {
+        "rank": 51,
+        "points": 1207.4,
+        "region": "AS",
+        "name": "FlyQuest"
+      },
+      "m80": {
+        "rank": 52,
+        "points": 1203.8,
+        "region": "AM",
+        "name": "M80"
+      },
+      "wildcard": {
+        "rank": 53,
+        "points": 1200.6,
+        "region": "AM",
+        "name": "Wildcard"
+      },
+      "iberian_soul": {
+        "rank": 54,
+        "points": 1197.1,
+        "region": "EU",
+        "name": "Iberian Soul"
+      },
+      "genone": {
+        "rank": 55,
+        "points": 1170,
+        "region": "EU",
+        "name": "GenOne"
+      },
+      "omega": {
+        "rank": 56,
+        "points": 1163.7,
+        "region": "EU",
+        "name": "OMEGA"
+      },
+      "jam_(ukrainian_team)": {
+        "rank": 57,
+        "points": 1155,
+        "region": "EU",
+        "name": "JAM"
+      },
+      "inox_division": {
+        "rank": 58,
+        "points": 1142.4,
+        "region": "EU",
+        "name": "INOX Division"
+      },
+      "phantom_esports": {
+        "rank": 59,
+        "points": 1135.3,
+        "region": "EU",
+        "name": "Phantom Esports"
+      },
+      "sinners_esports": {
+        "rank": 60,
+        "points": 1132.3,
+        "region": "EU",
+        "name": "SINNERS Esports"
+      },
+      "ww_team": {
+        "rank": 61,
+        "points": 1131.3,
+        "region": "EU",
+        "name": "WW TEAM"
+      },
+      "fluxo_w7m": {
+        "rank": 62,
+        "points": 1116.5,
+        "region": "AM",
+        "name": "Fluxo W7M"
+      },
+      "butterfly_(russian_team)": {
+        "rank": 63,
+        "points": 1116,
+        "region": "EU",
+        "name": "Butterfly"
+      },
+      "nemiga_gaming": {
+        "rank": 64,
+        "points": 1115.7,
+        "region": "EU",
+        "name": "Nemiga Gaming"
+      },
+      "sportsbetexpert": {
+        "rank": 65,
+        "points": 1105.4,
+        "region": "AM",
+        "name": "SportsBetExpert"
+      },
+      "depo": {
+        "rank": 66,
+        "points": 1102.4,
+        "region": "AS",
+        "name": "DEPO"
+      },
+      "color": {
+        "rank": 67,
+        "points": 1097.8,
+        "region": "EU",
+        "name": "Color"
+      },
+      "imperial_esports": {
+        "rank": 68,
+        "points": 1093.3,
+        "region": "AM",
+        "name": "Imperial Esports"
+      },
+      "metizport": {
+        "rank": 69,
+        "points": 1090.5,
+        "region": "EU",
+        "name": "Metizport"
+      },
+      "brute": {
+        "rank": 70,
+        "points": 1089.5,
+        "region": "EU",
+        "name": "BRUTE"
+      },
+      "walczaki": {
+        "rank": 71,
+        "points": 1087.1,
+        "region": "EU",
+        "name": "Walczaki"
+      },
+      "9ine": {
+        "rank": 72,
+        "points": 1086.5,
+        "region": "EU",
+        "name": "9INE"
+      },
+      "ex-ruby": {
+        "rank": 73,
+        "points": 1081.1,
+        "region": "EU",
+        "name": "ex-RUBY"
+      },
+      "cybershoke_esports": {
+        "rank": 74,
+        "points": 1079.5,
+        "region": "EU",
+        "name": "CYBERSHOKE Esports"
+      },
+      "rune_eaters_esports": {
+        "rank": 75,
+        "points": 1073.7,
+        "region": "EU",
+        "name": "Rune Eaters Esports"
+      },
+      "novaq": {
+        "rank": 76,
+        "points": 1068.4,
+        "region": "EU",
+        "name": "NOVAQ"
+      },
+      "esport_academy_copenhagen": {
+        "rank": 77,
+        "points": 1061.2,
+        "region": "EU",
+        "name": "Esport Academy Copenhagen"
+      },
+      "cybershoke_prospects": {
+        "rank": 78,
+        "points": 1061.1,
+        "region": "EU",
+        "name": "CYBERSHOKE Prospects"
+      },
+      "ex-zero_tenacity": {
+        "rank": 79,
+        "points": 1060.3,
+        "region": "EU",
+        "name": "ex-Zero Tenacity"
+      },
+      "thunderdownunder": {
+        "rank": 80,
+        "points": 1050.1,
+        "region": "AS",
+        "name": "THUNDERdOWNUNDER"
+      },
+      "eternal_fire": {
+        "rank": 81,
+        "points": 1049.9,
+        "region": "EU",
+        "name": "Eternal Fire"
+      },
+      "basement_boys": {
+        "rank": 82,
+        "points": 1044.9,
+        "region": "EU",
+        "name": "BASEMENT BOYS"
+      },
+      "og": {
+        "rank": 83,
+        "points": 1038.1,
+        "region": "EU",
+        "name": "OG"
+      },
+      "bestia": {
+        "rank": 84,
+        "points": 1036.8,
+        "region": "AM",
+        "name": "BESTIA"
+      },
+      "astral_esports": {
+        "rank": 85,
+        "points": 1036,
+        "region": "EU",
+        "name": "ASTRAL Esports"
+      },
+      "nexus_gaming": {
+        "rank": 86,
+        "points": 997.7,
+        "region": "EU",
+        "name": "Nexus Gaming"
+      },
+      "life's_a_game": {
+        "rank": 87,
+        "points": 997.5,
+        "region": "AM",
+        "name": "Life's A Game"
+      },
+      "wopa_esport": {
+        "rank": 88,
+        "points": 996.9,
+        "region": "EU",
+        "name": "WOPA Esport"
+      },
+      "ex-rustec": {
+        "rank": 89,
+        "points": 996.3,
+        "region": "EU",
+        "name": "ex-RUSTEC"
+      },
+      "bushido_wildcats": {
+        "rank": 90,
+        "points": 993.7,
+        "region": "EU",
+        "name": "Bushido Wildcats"
+      },
+      "baks_esports": {
+        "rank": 92,
+        "points": 990.1,
+        "region": "EU",
+        "name": "BAKS Esports"
+      },
+      "largadosypelados": {
+        "rank": 93,
+        "points": 985.2,
+        "region": "AM",
+        "name": "LargadosyPelados"
+      },
+      "quazar": {
+        "rank": 94,
+        "points": 981.5,
+        "region": "EU",
+        "name": "QUAZAR"
+      },
+      "arcred": {
+        "rank": 95,
+        "points": 976.2,
+        "region": "EU",
+        "name": "ARCRED"
+      },
+      "marsborne": {
+        "rank": 96,
+        "points": 957.8,
+        "region": "AM",
+        "name": "Marsborne"
+      },
+      "ground_zero_gaming": {
+        "rank": 97,
+        "points": 951.2,
+        "region": "AS",
+        "name": "Ground Zero Gaming"
+      },
+      "chicken_coop_esports": {
+        "rank": 98,
+        "points": 946.2,
+        "region": "AM",
+        "name": "Chicken Coop Esports"
+      },
+      "unity_esports": {
+        "rank": 99,
+        "points": 946.1,
+        "region": "EU",
+        "name": "UNiTY esports"
+      },
+      "black_phoenix": {
+        "rank": 100,
+        "points": 946,
+        "region": "EU",
+        "name": "Black Phoenix"
+      },
+      "team_voca": {
+        "rank": 101,
+        "points": 944,
+        "region": "AM",
+        "name": "Team Voca"
+      },
+      "shinden": {
+        "rank": 102,
+        "points": 943.7,
+        "region": "AM",
+        "name": "ShindeN"
+      },
+      "sparta_esports": {
+        "rank": 103,
+        "points": 940.7,
+        "region": "EU",
+        "name": "SPARTA Esports"
+      },
+      "forze_reload": {
+        "rank": 104,
+        "points": 939.2,
+        "region": "EU",
+        "name": "FORZE Reload"
+      },
+      "johnny_speeds": {
+        "rank": 105,
+        "points": 937.5,
+        "region": "EU",
+        "name": "Johnny Speeds"
+      },
+      "lavked": {
+        "rank": 106,
+        "points": 933.7,
+        "region": "EU",
+        "name": "lavked"
+      },
+      "g2_ares": {
+        "rank": 107,
+        "points": 931.9,
+        "region": "EU",
+        "name": "G2 Ares"
+      },
+      "just_players": {
+        "rank": 109,
+        "points": 925.6,
+        "region": "EU",
+        "name": "Just Players"
+      },
+      "the_last_resort": {
+        "rank": 111,
+        "points": 923.5,
+        "region": "EU",
+        "name": "The Last Resort"
+      },
+      "bounty_hunters_esports": {
+        "rank": 113,
+        "points": 913.2,
+        "region": "AM",
+        "name": "Bounty Hunters Esports"
+      },
+      "galorys": {
+        "rank": 114,
+        "points": 913,
+        "region": "AM",
+        "name": "Galorys"
+      },
+      "atreides": {
+        "rank": 115,
+        "points": 907.9,
+        "region": "EU",
+        "name": "Atreides"
+      },
+      "argos": {
+        "rank": 116,
+        "points": 906,
+        "region": "EU",
+        "name": "ARGOS"
+      },
+      "nordic_partners_gaming": {
+        "rank": 117,
+        "points": 904.9,
+        "region": "EU",
+        "name": "Nordic Partners Gaming"
+      },
+      "leo_team": {
+        "rank": 118,
+        "points": 903.9,
+        "region": "EU",
+        "name": "Leo Team"
+      },
+      "team_spirit_academy": {
+        "rank": 119,
+        "points": 901,
+        "region": "EU",
+        "name": "Team Spirit Academy"
+      },
+      "pure": {
+        "rank": 120,
+        "points": 897.1,
+        "region": "EU",
+        "name": "PURE"
+      },
+      "rebels_gaming": {
+        "rank": 122,
+        "points": 889.9,
+        "region": "EU",
+        "name": "Rebels Gaming"
+      },
+      "ence": {
+        "rank": 123,
+        "points": 888.9,
+        "region": "EU",
+        "name": "ENCE"
+      },
+      "wraith_pcific": {
+        "rank": 125,
+        "points": 886.2,
+        "region": "EU",
+        "name": "WRAITH PCIFIC"
+      },
+      "masonic": {
+        "rank": 126,
+        "points": 879.3,
+        "region": "EU",
+        "name": "MASONIC"
+      },
+      "natus_vincere_junior": {
+        "rank": 127,
+        "points": 879.2,
+        "region": "EU",
+        "name": "Natus Vincere Junior"
+      },
+      "keyd_stars": {
+        "rank": 128,
+        "points": 871.8,
+        "region": "AM",
+        "name": "Keyd Stars"
+      },
+      "isurus": {
+        "rank": 129,
+        "points": 870.9,
+        "region": "AM",
+        "name": "Isurus"
+      },
+      "5star_esports": {
+        "rank": 130,
+        "points": 869.5,
+        "region": "AS",
+        "name": "5star eSports"
+      },
+      "lazer_cats": {
+        "rank": 131,
+        "points": 869.1,
+        "region": "EU",
+        "name": "Lazer Cats"
+      },
+      "rethink": {
+        "rank": 132,
+        "points": 868.6,
+        "region": "EU",
+        "name": "ReThink"
+      },
+      "enjoy_(russian_team)": {
+        "rank": 133,
+        "points": 866.8,
+        "region": "EU",
+        "name": "ENJOY"
+      },
+      "passion_ua": {
+        "rank": 134,
+        "points": 866.8,
+        "region": "AM",
+        "name": "Passion UA"
+      },
+      "havu": {
+        "rank": 135,
+        "points": 861.3,
+        "region": "EU",
+        "name": "HAVU"
+      },
+      "the_huns_esports": {
+        "rank": 136,
+        "points": 860.2,
+        "region": "AS",
+        "name": "The Huns Esports"
+      },
+      "fisher_college": {
+        "rank": 137,
+        "points": 857.3,
+        "region": "EU",
+        "name": "Fisher College"
+      },
+      "mellren": {
+        "rank": 138,
+        "points": 854.7,
+        "region": "EU",
+        "name": "mellren"
+      },
+      "washed_(danish_team)": {
+        "rank": 139,
+        "points": 853.9,
+        "region": "EU",
+        "name": "Washed"
+      },
+      "whitebit_team": {
+        "rank": 140,
+        "points": 853.7,
+        "region": "EU",
+        "name": "WhiteBIT Team"
+      },
+      "endless_journey": {
+        "rank": 141,
+        "points": 849.8,
+        "region": "EU",
+        "name": "Endless Journey"
+      },
+      "yawara_e-sports": {
+        "rank": 142,
+        "points": 847.5,
+        "region": "AM",
+        "name": "Yawara E-Sports"
+      },
+      "benched_gods": {
+        "rank": 143,
+        "points": 834.2,
+        "region": "EU",
+        "name": "Benched gods"
+      },
+      "noir_verse": {
+        "rank": 144,
+        "points": 830.9,
+        "region": "EU",
+        "name": "Noir Verse"
+      },
+      "ic_academy": {
+        "rank": 145,
+        "points": 826.6,
+        "region": "EU",
+        "name": "IC Academy"
+      },
+      "honvéd_esport": {
+        "rank": 146,
+        "points": 824.8,
+        "region": "EU",
+        "name": "Honvéd Esport"
+      },
+      "for_fun": {
+        "rank": 147,
+        "points": 824.4,
+        "region": "AM",
+        "name": "For Fun"
+      },
+      "hyperspirit": {
+        "rank": 148,
+        "points": 823.6,
+        "region": "EU",
+        "name": "HYPERSPIRIT"
+      },
+      "mouz_nxt": {
+        "rank": 149,
+        "points": 820.1,
+        "region": "EU",
+        "name": "MOUZ NXT"
+      },
+      "nexvoid": {
+        "rank": 150,
+        "points": 811.7,
+        "region": "AS",
+        "name": "NEXVOID"
+      },
+      "sinqu_esports": {
+        "rank": 151,
+        "points": 811.5,
+        "region": "EU",
+        "name": "SINQU Esports"
+      },
+      "dragonclaw": {
+        "rank": 152,
+        "points": 810.6,
+        "region": "EU",
+        "name": "DragonClaw"
+      },
+      "turma_do_pagode": {
+        "rank": 153,
+        "points": 810.5,
+        "region": "AM",
+        "name": "Turma do Pagode"
+      },
+      "illwill": {
+        "rank": 154,
+        "points": 803.7,
+        "region": "EU",
+        "name": "illwill"
+      },
+      "6666_esports": {
+        "rank": 155,
+        "points": 801.3,
+        "region": "EU",
+        "name": "6666 Esports"
+      },
+      "vexar": {
+        "rank": 156,
+        "points": 801,
+        "region": "EU",
+        "name": "Vexar"
+      },
+      "gaimin_gladiators": {
+        "rank": 157,
+        "points": 800.3,
+        "region": "AM",
+        "name": "Gaimin Gladiators"
+      },
+      "lph_gaming": {
+        "rank": 158,
+        "points": 799,
+        "region": "EU",
+        "name": "LPH Gaming"
+      },
+      "fire_flux_esports": {
+        "rank": 159,
+        "points": 794.5,
+        "region": "EU",
+        "name": "Fire Flux Esports"
+      },
+      "am_gaming": {
+        "rank": 160,
+        "points": 791.5,
+        "region": "EU",
+        "name": "AM Gaming"
+      },
+      "strael-bora": {
+        "rank": 161,
+        "points": 791.4,
+        "region": "EU",
+        "name": "Strael-Bora"
+      },
+      "oddik": {
+        "rank": 162,
+        "points": 790.8,
+        "region": "AM",
+        "name": "ODDIK"
+      },
+      "drip_too_hard": {
+        "rank": 163,
+        "points": 790.7,
+        "region": "EU",
+        "name": "Drip Too Hard"
+      },
+      "fake_do_biru": {
+        "rank": 164,
+        "points": 789.9,
+        "region": "AM",
+        "name": "Fake do Biru"
+      },
+      "alka_esports": {
+        "rank": 165,
+        "points": 788.2,
+        "region": "AM",
+        "name": "Alka Esports"
+      },
+      "ex-mana_esports": {
+        "rank": 166,
+        "points": 783,
+        "region": "EU",
+        "name": "ex-MANA eSports"
+      },
+      "permitta_esports": {
+        "rank": 167,
+        "points": 782.6,
+        "region": "EU",
+        "name": "Permitta Esports"
+      },
+      "regain": {
+        "rank": 168,
+        "points": 782.3,
+        "region": "AM",
+        "name": "regain"
+      },
+      "roamsfiest": {
+        "rank": 169,
+        "points": 779.8,
+        "region": "EU",
+        "name": "roamsfiest"
+      },
+      "esport_berg": {
+        "rank": 170,
+        "points": 778.4,
+        "region": "EU",
+        "name": "Esport BERG"
+      },
+      "mibr_female": {
+        "rank": 171,
+        "points": 777.5,
+        "region": "AM",
+        "name": "MIBR Female"
+      },
+      "red_canids": {
+        "rank": 172,
+        "points": 771.5,
+        "region": "AM",
+        "name": "RED Canids"
+      },
+      "villainous": {
+        "rank": 173,
+        "points": 771.3,
+        "region": "AM",
+        "name": "Villainous"
+      },
+      "uno_mille": {
+        "rank": 174,
+        "points": 771.2,
+        "region": "AM",
+        "name": "UNO MILLE"
+      },
+      "sangal_esports": {
+        "rank": 175,
+        "points": 768.2,
+        "region": "EU",
+        "name": "Sangal Esports"
+      },
+      "kaleido_gaming": {
+        "rank": 176,
+        "points": 766.5,
+        "region": "AS",
+        "name": "Kaleido Gaming"
+      },
+      "falcons_force": {
+        "rank": 177,
+        "points": 763.3,
+        "region": "EU",
+        "name": "Falcons Force"
+      },
+      "nutorious": {
+        "rank": 178,
+        "points": 761.7,
+        "region": "AM",
+        "name": "NuTorious"
+      },
+      "borracheiros": {
+        "rank": 179,
+        "points": 759,
+        "region": "AM",
+        "name": "BORRACHEIROS"
+      },
+      "semperfi_esports": {
+        "rank": 180,
+        "points": 759,
+        "region": "AS",
+        "name": "SemperFi Esports"
+      },
+      "rooster": {
+        "rank": 181,
+        "points": 758.3,
+        "region": "AS",
+        "name": "Rooster"
+      },
+      "misa_esports": {
+        "rank": 182,
+        "points": 758.2,
+        "region": "EU",
+        "name": "Misa Esports"
+      },
+      "saw_youngsters": {
+        "rank": 183,
+        "points": 756.5,
+        "region": "EU",
+        "name": "SAW Youngsters"
+      },
+      "mindfreak_(australian_team)": {
+        "rank": 184,
+        "points": 754.9,
+        "region": "AS",
+        "name": "Mindfreak"
+      },
+      "mai_tai": {
+        "rank": 185,
+        "points": 754.3,
+        "region": "EU",
+        "name": "Mai tai"
+      },
+      "the_unit": {
+        "rank": 187,
+        "points": 754.2,
+        "region": "AS",
+        "name": "THE UNIT"
+      },
+      "aimclub_(romanian_team)": {
+        "rank": 188,
+        "points": 753.3,
+        "region": "EU",
+        "name": "Aimclub"
+      },
+      "bebop": {
+        "rank": 189,
+        "points": 753.1,
+        "region": "EU",
+        "name": "Bebop"
+      },
+      "algo_esports": {
+        "rank": 190,
+        "points": 752.9,
+        "region": "EU",
+        "name": "ALGO Esports"
+      },
+      "mibr_academy": {
+        "rank": 191,
+        "points": 750.3,
+        "region": "AM",
+        "name": "MIBR Academy"
+      },
+      "new_vision": {
+        "rank": 192,
+        "points": 749,
+        "region": "EU",
+        "name": "NEW VISION"
+      },
+      "entropy_gaming": {
+        "rank": 193,
+        "points": 741,
+        "region": "EU",
+        "name": "Entropy Gaming"
+      },
+      "hashiras": {
+        "rank": 194,
+        "points": 739.9,
+        "region": "EU",
+        "name": "Hashiras"
+      },
+      "megoshort": {
+        "rank": 195,
+        "points": 736.4,
+        "region": "EU",
+        "name": "megoshort"
+      },
+      "team_abyssal": {
+        "rank": 197,
+        "points": 730.3,
+        "region": "AS",
+        "name": "Team Abyssal"
+      },
+      "donstu_esports": {
+        "rank": 198,
+        "points": 727.6,
+        "region": "EU",
+        "name": "DONSTU Esports"
+      },
+      "alter_ego": {
+        "rank": 199,
+        "points": 724.2,
+        "region": "AS",
+        "name": "Alter Ego"
+      },
+      "ex-against_all_authority": {
+        "rank": 200,
+        "points": 723,
+        "region": "EU",
+        "name": "ex-against All authority"
+      },
+      "tdk": {
+        "rank": 201,
+        "points": 722.2,
+        "region": "EU",
+        "name": "TDK"
+      },
+      "brazylijski_luz": {
+        "rank": 202,
+        "points": 719.8,
+        "region": "EU",
+        "name": "brazylijski luz"
+      },
+      "young_ninjas": {
+        "rank": 203,
+        "points": 719.1,
+        "region": "EU",
+        "name": "Young Ninjas"
+      },
+      "rare_atom": {
+        "rank": 204,
+        "points": 717.3,
+        "region": "AS",
+        "name": "Rare Atom"
+      },
+      "chinggis_warriors": {
+        "rank": 205,
+        "points": 716.1,
+        "region": "AS",
+        "name": "Chinggis Warriors"
+      },
+      "club_333": {
+        "rank": 206,
+        "points": 716.1,
+        "region": "AM",
+        "name": "Club 333"
+      },
+      "wazabi": {
+        "rank": 207,
+        "points": 715.6,
+        "region": "EU",
+        "name": "WAZABI"
+      }
+    },
+    "byName": {
+      "33": {
+        "rank": 110,
+        "points": 924.6,
+        "region": "EU",
+        "name": "33"
+      },
+      "team spirit": {
+        "rank": 1,
+        "points": 1987.8,
+        "region": "EU",
+        "name": "Team Spirit"
+      },
+      "team falcons": {
+        "rank": 2,
+        "points": 1854,
+        "region": "EU",
+        "name": "Team Falcons"
+      },
+      "fut esports": {
+        "rank": 3,
+        "points": 1846.2,
+        "region": "EU",
+        "name": "FUT Esports"
+      },
+      "mouz": {
+        "rank": 4,
+        "points": 1822.8,
+        "region": "EU",
+        "name": "MOUZ"
+      },
+      "legacy": {
+        "rank": 5,
+        "points": 1796.2,
+        "region": "AM",
+        "name": "Legacy"
+      },
+      "furia": {
+        "rank": 6,
+        "points": 1753.9,
+        "region": "AM",
+        "name": "FURIA"
+      },
+      "team vitality": {
+        "rank": 7,
+        "points": 1718.2,
+        "region": "EU",
+        "name": "Team Vitality"
+      },
+      "9z team": {
+        "rank": 8,
+        "points": 1676.9,
+        "region": "AM",
+        "name": "9z Team"
+      },
+      "g2 esports": {
+        "rank": 9,
+        "points": 1655,
+        "region": "EU",
+        "name": "G2 Esports"
+      },
+      "faze clan": {
+        "rank": 10,
+        "points": 1651.7,
+        "region": "EU",
+        "name": "FaZe Clan"
+      },
+      "natus vincere": {
+        "rank": 11,
+        "points": 1645,
+        "region": "EU",
+        "name": "Natus Vincere"
+      },
+      "betboom team": {
+        "rank": 12,
+        "points": 1561.9,
+        "region": "EU",
+        "name": "BetBoom Team"
+      },
+      "big": {
+        "rank": 13,
+        "points": 1558.8,
+        "region": "EU",
+        "name": "BIG"
+      },
+      "aurora gaming": {
+        "rank": 14,
+        "points": 1547.9,
+        "region": "EU",
+        "name": "Aurora Gaming"
+      },
+      "parivision": {
+        "rank": 15,
+        "points": 1539.6,
+        "region": "EU",
+        "name": "PARIVISION"
+      },
+      "b8": {
+        "rank": 16,
+        "points": 1534.6,
+        "region": "EU",
+        "name": "B8"
+      },
+      "the mongolz": {
+        "rank": 17,
+        "points": 1525.6,
+        "region": "AS",
+        "name": "The MongolZ"
+      },
+      "astralis": {
+        "rank": 18,
+        "points": 1504.5,
+        "region": "EU",
+        "name": "Astralis"
+      },
+      "team liquid": {
+        "rank": 19,
+        "points": 1503.8,
+        "region": "AM",
+        "name": "Team Liquid"
+      },
+      "mibr": {
+        "rank": 20,
+        "points": 1500.9,
+        "region": "AM",
+        "name": "MIBR"
+      },
+      "alliance": {
+        "rank": 21,
+        "points": 1472,
+        "region": "EU",
+        "name": "Alliance"
+      },
+      "magic": {
+        "rank": 22,
+        "points": 1460.2,
+        "region": "EU",
+        "name": "magic"
+      },
+      "gamerlegion": {
+        "rank": 23,
+        "points": 1458,
+        "region": "EU",
+        "name": "GamerLegion"
+      },
+      "ic esports": {
+        "rank": 24,
+        "points": 1442.6,
+        "region": "EU",
+        "name": "IC Esports"
+      },
+      "tyloo": {
+        "rank": 25,
+        "points": 1410.3,
+        "region": "AS",
+        "name": "TYLOO"
+      },
+      "hotu": {
+        "rank": 26,
+        "points": 1407.4,
+        "region": "EU",
+        "name": "HOTU"
+      },
+      "jijiehao": {
+        "rank": 27,
+        "points": 1397.9,
+        "region": "EU",
+        "name": "JiJieHao"
+      },
+      "ninjas in pyjamas": {
+        "rank": 28,
+        "points": 1396.2,
+        "region": "EU",
+        "name": "Ninjas in Pyjamas"
+      },
+      "heroic": {
+        "rank": 29,
+        "points": 1392,
+        "region": "EU",
+        "name": "HEROIC"
+      },
+      "100 thieves": {
+        "rank": 30,
+        "points": 1382.1,
+        "region": "EU",
+        "name": "100 Thieves"
+      },
+      "k27": {
+        "rank": 31,
+        "points": 1374.8,
+        "region": "EU",
+        "name": "K27"
+      },
+      "dendele cs": {
+        "rank": 32,
+        "points": 1364.8,
+        "region": "AM",
+        "name": "DENDELE CS"
+      },
+      "fnatic": {
+        "rank": 33,
+        "points": 1360.7,
+        "region": "EU",
+        "name": "Fnatic"
+      },
+      "lynn vision gaming": {
+        "rank": 34,
+        "points": 1354.4,
+        "region": "AS",
+        "name": "Lynn Vision Gaming"
+      },
+      "eyeballers": {
+        "rank": 35,
+        "points": 1351.5,
+        "region": "EU",
+        "name": "EYEBALLERS"
+      },
+      "pain gaming": {
+        "rank": 36,
+        "points": 1343.9,
+        "region": "AM",
+        "name": "paiN Gaming"
+      },
+      "1w team": {
+        "rank": 37,
+        "points": 1331.1,
+        "region": "EU",
+        "name": "1w Team"
+      },
+      "virtus.pro": {
+        "rank": 38,
+        "points": 1328.3,
+        "region": "EU",
+        "name": "Virtus.pro"
+      },
+      "bc.game esports": {
+        "rank": 39,
+        "points": 1324,
+        "region": "EU",
+        "name": "BC.Game Esports"
+      },
+      "betclic apogee esports": {
+        "rank": 40,
+        "points": 1304.2,
+        "region": "EU",
+        "name": "Betclic Apogee Esports"
+      },
+      "3dmax": {
+        "rank": 41,
+        "points": 1301.4,
+        "region": "EU",
+        "name": "3DMAX"
+      },
+      "luminosity gaming": {
+        "rank": 42,
+        "points": 1298.2,
+        "region": "EU",
+        "name": "Luminosity Gaming"
+      },
+      "sashi esport": {
+        "rank": 43,
+        "points": 1266.2,
+        "region": "EU",
+        "name": "Sashi Esport"
+      },
+      "acend": {
+        "rank": 44,
+        "points": 1259.3,
+        "region": "EU",
+        "name": "Acend"
+      },
+      "team nemesis": {
+        "rank": 45,
+        "points": 1256.8,
+        "region": "EU",
+        "name": "Team Nemesis"
+      },
+      "nuclear tigeres": {
+        "rank": 46,
+        "points": 1244.4,
+        "region": "EU",
+        "name": "Nuclear TigeRES"
+      },
+      "echo": {
+        "rank": 47,
+        "points": 1226.6,
+        "region": "EU",
+        "name": "Echo"
+      },
+      "infinite": {
+        "rank": 48,
+        "points": 1220.4,
+        "region": "EU",
+        "name": "INFINITE"
+      },
+      "nrg": {
+        "rank": 49,
+        "points": 1218.9,
+        "region": "AM",
+        "name": "NRG"
+      },
+      "fokus": {
+        "rank": 50,
+        "points": 1215.2,
+        "region": "EU",
+        "name": "FOKUS"
+      },
+      "flyquest": {
+        "rank": 51,
+        "points": 1207.4,
+        "region": "AS",
+        "name": "FlyQuest"
+      },
+      "m80": {
+        "rank": 52,
+        "points": 1203.8,
+        "region": "AM",
+        "name": "M80"
+      },
+      "wildcard": {
+        "rank": 53,
+        "points": 1200.6,
+        "region": "AM",
+        "name": "Wildcard"
+      },
+      "iberian soul": {
+        "rank": 54,
+        "points": 1197.1,
+        "region": "EU",
+        "name": "Iberian Soul"
+      },
+      "genone": {
+        "rank": 55,
+        "points": 1170,
+        "region": "EU",
+        "name": "GenOne"
+      },
+      "omega": {
+        "rank": 56,
+        "points": 1163.7,
+        "region": "EU",
+        "name": "OMEGA"
+      },
+      "jam": {
+        "rank": 57,
+        "points": 1155,
+        "region": "EU",
+        "name": "JAM"
+      },
+      "inox division": {
+        "rank": 58,
+        "points": 1142.4,
+        "region": "EU",
+        "name": "INOX Division"
+      },
+      "phantom esports": {
+        "rank": 59,
+        "points": 1135.3,
+        "region": "EU",
+        "name": "Phantom Esports"
+      },
+      "sinners esports": {
+        "rank": 60,
+        "points": 1132.3,
+        "region": "EU",
+        "name": "SINNERS Esports"
+      },
+      "ww team": {
+        "rank": 61,
+        "points": 1131.3,
+        "region": "EU",
+        "name": "WW TEAM"
+      },
+      "fluxo w7m": {
+        "rank": 62,
+        "points": 1116.5,
+        "region": "AM",
+        "name": "Fluxo W7M"
+      },
+      "butterfly": {
+        "rank": 63,
+        "points": 1116,
+        "region": "EU",
+        "name": "Butterfly"
+      },
+      "nemiga gaming": {
+        "rank": 64,
+        "points": 1115.7,
+        "region": "EU",
+        "name": "Nemiga Gaming"
+      },
+      "sportsbetexpert": {
+        "rank": 65,
+        "points": 1105.4,
+        "region": "AM",
+        "name": "SportsBetExpert"
+      },
+      "depo": {
+        "rank": 66,
+        "points": 1102.4,
+        "region": "AS",
+        "name": "DEPO"
+      },
+      "color": {
+        "rank": 67,
+        "points": 1097.8,
+        "region": "EU",
+        "name": "Color"
+      },
+      "imperial esports": {
+        "rank": 68,
+        "points": 1093.3,
+        "region": "AM",
+        "name": "Imperial Esports"
+      },
+      "metizport": {
+        "rank": 69,
+        "points": 1090.5,
+        "region": "EU",
+        "name": "Metizport"
+      },
+      "brute": {
+        "rank": 70,
+        "points": 1089.5,
+        "region": "EU",
+        "name": "BRUTE"
+      },
+      "walczaki": {
+        "rank": 71,
+        "points": 1087.1,
+        "region": "EU",
+        "name": "Walczaki"
+      },
+      "9ine": {
+        "rank": 72,
+        "points": 1086.5,
+        "region": "EU",
+        "name": "9INE"
+      },
+      "ex-ruby": {
+        "rank": 73,
+        "points": 1081.1,
+        "region": "EU",
+        "name": "ex-RUBY"
+      },
+      "cybershoke esports": {
+        "rank": 74,
+        "points": 1079.5,
+        "region": "EU",
+        "name": "CYBERSHOKE Esports"
+      },
+      "rune eaters esports": {
+        "rank": 75,
+        "points": 1073.7,
+        "region": "EU",
+        "name": "Rune Eaters Esports"
+      },
+      "novaq": {
+        "rank": 76,
+        "points": 1068.4,
+        "region": "EU",
+        "name": "NOVAQ"
+      },
+      "esport academy copenhagen": {
+        "rank": 77,
+        "points": 1061.2,
+        "region": "EU",
+        "name": "Esport Academy Copenhagen"
+      },
+      "cybershoke prospects": {
+        "rank": 78,
+        "points": 1061.1,
+        "region": "EU",
+        "name": "CYBERSHOKE Prospects"
+      },
+      "ex-zero tenacity": {
+        "rank": 79,
+        "points": 1060.3,
+        "region": "EU",
+        "name": "ex-Zero Tenacity"
+      },
+      "thunderdownunder": {
+        "rank": 80,
+        "points": 1050.1,
+        "region": "AS",
+        "name": "THUNDERdOWNUNDER"
+      },
+      "eternal fire": {
+        "rank": 81,
+        "points": 1049.9,
+        "region": "EU",
+        "name": "Eternal Fire"
+      },
+      "basement boys": {
+        "rank": 82,
+        "points": 1044.9,
+        "region": "EU",
+        "name": "BASEMENT BOYS"
+      },
+      "og": {
+        "rank": 83,
+        "points": 1038.1,
+        "region": "EU",
+        "name": "OG"
+      },
+      "bestia": {
+        "rank": 84,
+        "points": 1036.8,
+        "region": "AM",
+        "name": "BESTIA"
+      },
+      "astral esports": {
+        "rank": 85,
+        "points": 1036,
+        "region": "EU",
+        "name": "ASTRAL Esports"
+      },
+      "nexus gaming": {
+        "rank": 86,
+        "points": 997.7,
+        "region": "EU",
+        "name": "Nexus Gaming"
+      },
+      "life's a game": {
+        "rank": 87,
+        "points": 997.5,
+        "region": "AM",
+        "name": "Life's A Game"
+      },
+      "wopa esport": {
+        "rank": 88,
+        "points": 996.9,
+        "region": "EU",
+        "name": "WOPA Esport"
+      },
+      "ex-rustec": {
+        "rank": 89,
+        "points": 996.3,
+        "region": "EU",
+        "name": "ex-RUSTEC"
+      },
+      "bushido wildcats": {
+        "rank": 90,
+        "points": 993.7,
+        "region": "EU",
+        "name": "Bushido Wildcats"
+      },
+      "baks esports": {
+        "rank": 92,
+        "points": 990.1,
+        "region": "EU",
+        "name": "BAKS Esports"
+      },
+      "largadosypelados": {
+        "rank": 93,
+        "points": 985.2,
+        "region": "AM",
+        "name": "LargadosyPelados"
+      },
+      "quazar": {
+        "rank": 94,
+        "points": 981.5,
+        "region": "EU",
+        "name": "QUAZAR"
+      },
+      "arcred": {
+        "rank": 95,
+        "points": 976.2,
+        "region": "EU",
+        "name": "ARCRED"
+      },
+      "marsborne": {
+        "rank": 96,
+        "points": 957.8,
+        "region": "AM",
+        "name": "Marsborne"
+      },
+      "ground zero gaming": {
+        "rank": 97,
+        "points": 951.2,
+        "region": "AS",
+        "name": "Ground Zero Gaming"
+      },
+      "chicken coop esports": {
+        "rank": 98,
+        "points": 946.2,
+        "region": "AM",
+        "name": "Chicken Coop Esports"
+      },
+      "unity esports": {
+        "rank": 99,
+        "points": 946.1,
+        "region": "EU",
+        "name": "UNiTY esports"
+      },
+      "black phoenix": {
+        "rank": 100,
+        "points": 946,
+        "region": "EU",
+        "name": "Black Phoenix"
+      },
+      "team voca": {
+        "rank": 101,
+        "points": 944,
+        "region": "AM",
+        "name": "Team Voca"
+      },
+      "shinden": {
+        "rank": 102,
+        "points": 943.7,
+        "region": "AM",
+        "name": "ShindeN"
+      },
+      "sparta esports": {
+        "rank": 103,
+        "points": 940.7,
+        "region": "EU",
+        "name": "SPARTA Esports"
+      },
+      "forze reload": {
+        "rank": 104,
+        "points": 939.2,
+        "region": "EU",
+        "name": "FORZE Reload"
+      },
+      "johnny speeds": {
+        "rank": 105,
+        "points": 937.5,
+        "region": "EU",
+        "name": "Johnny Speeds"
+      },
+      "lavked": {
+        "rank": 106,
+        "points": 933.7,
+        "region": "EU",
+        "name": "lavked"
+      },
+      "g2 ares": {
+        "rank": 107,
+        "points": 931.9,
+        "region": "EU",
+        "name": "G2 Ares"
+      },
+      "just players": {
+        "rank": 109,
+        "points": 925.6,
+        "region": "EU",
+        "name": "Just Players"
+      },
+      "the last resort": {
+        "rank": 111,
+        "points": 923.5,
+        "region": "EU",
+        "name": "The Last Resort"
+      },
+      "bounty hunters esports": {
+        "rank": 113,
+        "points": 913.2,
+        "region": "AM",
+        "name": "Bounty Hunters Esports"
+      },
+      "galorys": {
+        "rank": 114,
+        "points": 913,
+        "region": "AM",
+        "name": "Galorys"
+      },
+      "atreides": {
+        "rank": 115,
+        "points": 907.9,
+        "region": "EU",
+        "name": "Atreides"
+      },
+      "argos": {
+        "rank": 116,
+        "points": 906,
+        "region": "EU",
+        "name": "ARGOS"
+      },
+      "nordic partners gaming": {
+        "rank": 117,
+        "points": 904.9,
+        "region": "EU",
+        "name": "Nordic Partners Gaming"
+      },
+      "leo team": {
+        "rank": 118,
+        "points": 903.9,
+        "region": "EU",
+        "name": "Leo Team"
+      },
+      "team spirit academy": {
+        "rank": 119,
+        "points": 901,
+        "region": "EU",
+        "name": "Team Spirit Academy"
+      },
+      "pure": {
+        "rank": 120,
+        "points": 897.1,
+        "region": "EU",
+        "name": "PURE"
+      },
+      "rebels gaming": {
+        "rank": 122,
+        "points": 889.9,
+        "region": "EU",
+        "name": "Rebels Gaming"
+      },
+      "ence": {
+        "rank": 123,
+        "points": 888.9,
+        "region": "EU",
+        "name": "ENCE"
+      },
+      "wraith pcific": {
+        "rank": 125,
+        "points": 886.2,
+        "region": "EU",
+        "name": "WRAITH PCIFIC"
+      },
+      "masonic": {
+        "rank": 126,
+        "points": 879.3,
+        "region": "EU",
+        "name": "MASONIC"
+      },
+      "natus vincere junior": {
+        "rank": 127,
+        "points": 879.2,
+        "region": "EU",
+        "name": "Natus Vincere Junior"
+      },
+      "keyd stars": {
+        "rank": 128,
+        "points": 871.8,
+        "region": "AM",
+        "name": "Keyd Stars"
+      },
+      "isurus": {
+        "rank": 129,
+        "points": 870.9,
+        "region": "AM",
+        "name": "Isurus"
+      },
+      "5star esports": {
+        "rank": 130,
+        "points": 869.5,
+        "region": "AS",
+        "name": "5star eSports"
+      },
+      "lazer cats": {
+        "rank": 131,
+        "points": 869.1,
+        "region": "EU",
+        "name": "Lazer Cats"
+      },
+      "rethink": {
+        "rank": 132,
+        "points": 868.6,
+        "region": "EU",
+        "name": "ReThink"
+      },
+      "enjoy": {
+        "rank": 133,
+        "points": 866.8,
+        "region": "EU",
+        "name": "ENJOY"
+      },
+      "passion ua": {
+        "rank": 134,
+        "points": 866.8,
+        "region": "AM",
+        "name": "Passion UA"
+      },
+      "havu": {
+        "rank": 135,
+        "points": 861.3,
+        "region": "EU",
+        "name": "HAVU"
+      },
+      "the huns esports": {
+        "rank": 136,
+        "points": 860.2,
+        "region": "AS",
+        "name": "The Huns Esports"
+      },
+      "fisher college": {
+        "rank": 137,
+        "points": 857.3,
+        "region": "EU",
+        "name": "Fisher College"
+      },
+      "mellren": {
+        "rank": 138,
+        "points": 854.7,
+        "region": "EU",
+        "name": "mellren"
+      },
+      "washed": {
+        "rank": 139,
+        "points": 853.9,
+        "region": "EU",
+        "name": "Washed"
+      },
+      "whitebit team": {
+        "rank": 140,
+        "points": 853.7,
+        "region": "EU",
+        "name": "WhiteBIT Team"
+      },
+      "endless journey": {
+        "rank": 141,
+        "points": 849.8,
+        "region": "EU",
+        "name": "Endless Journey"
+      },
+      "yawara e-sports": {
+        "rank": 142,
+        "points": 847.5,
+        "region": "AM",
+        "name": "Yawara E-Sports"
+      },
+      "benched gods": {
+        "rank": 143,
+        "points": 834.2,
+        "region": "EU",
+        "name": "Benched gods"
+      },
+      "noir verse": {
+        "rank": 144,
+        "points": 830.9,
+        "region": "EU",
+        "name": "Noir Verse"
+      },
+      "ic academy": {
+        "rank": 145,
+        "points": 826.6,
+        "region": "EU",
+        "name": "IC Academy"
+      },
+      "honvéd esport": {
+        "rank": 146,
+        "points": 824.8,
+        "region": "EU",
+        "name": "Honvéd Esport"
+      },
+      "for fun": {
+        "rank": 147,
+        "points": 824.4,
+        "region": "AM",
+        "name": "For Fun"
+      },
+      "hyperspirit": {
+        "rank": 148,
+        "points": 823.6,
+        "region": "EU",
+        "name": "HYPERSPIRIT"
+      },
+      "mouz nxt": {
+        "rank": 149,
+        "points": 820.1,
+        "region": "EU",
+        "name": "MOUZ NXT"
+      },
+      "nexvoid": {
+        "rank": 150,
+        "points": 811.7,
+        "region": "AS",
+        "name": "NEXVOID"
+      },
+      "sinqu esports": {
+        "rank": 151,
+        "points": 811.5,
+        "region": "EU",
+        "name": "SINQU Esports"
+      },
+      "dragonclaw": {
+        "rank": 152,
+        "points": 810.6,
+        "region": "EU",
+        "name": "DragonClaw"
+      },
+      "turma do pagode": {
+        "rank": 153,
+        "points": 810.5,
+        "region": "AM",
+        "name": "Turma do Pagode"
+      },
+      "illwill": {
+        "rank": 154,
+        "points": 803.7,
+        "region": "EU",
+        "name": "illwill"
+      },
+      "6666 esports": {
+        "rank": 155,
+        "points": 801.3,
+        "region": "EU",
+        "name": "6666 Esports"
+      },
+      "vexar": {
+        "rank": 156,
+        "points": 801,
+        "region": "EU",
+        "name": "Vexar"
+      },
+      "gaimin gladiators": {
+        "rank": 157,
+        "points": 800.3,
+        "region": "AM",
+        "name": "Gaimin Gladiators"
+      },
+      "lph gaming": {
+        "rank": 158,
+        "points": 799,
+        "region": "EU",
+        "name": "LPH Gaming"
+      },
+      "fire flux esports": {
+        "rank": 159,
+        "points": 794.5,
+        "region": "EU",
+        "name": "Fire Flux Esports"
+      },
+      "am gaming": {
+        "rank": 160,
+        "points": 791.5,
+        "region": "EU",
+        "name": "AM Gaming"
+      },
+      "strael-bora": {
+        "rank": 161,
+        "points": 791.4,
+        "region": "EU",
+        "name": "Strael-Bora"
+      },
+      "oddik": {
+        "rank": 162,
+        "points": 790.8,
+        "region": "AM",
+        "name": "ODDIK"
+      },
+      "drip too hard": {
+        "rank": 163,
+        "points": 790.7,
+        "region": "EU",
+        "name": "Drip Too Hard"
+      },
+      "fake do biru": {
+        "rank": 164,
+        "points": 789.9,
+        "region": "AM",
+        "name": "Fake do Biru"
+      },
+      "alka esports": {
+        "rank": 165,
+        "points": 788.2,
+        "region": "AM",
+        "name": "Alka Esports"
+      },
+      "ex-mana esports": {
+        "rank": 166,
+        "points": 783,
+        "region": "EU",
+        "name": "ex-MANA eSports"
+      },
+      "permitta esports": {
+        "rank": 167,
+        "points": 782.6,
+        "region": "EU",
+        "name": "Permitta Esports"
+      },
+      "regain": {
+        "rank": 168,
+        "points": 782.3,
+        "region": "AM",
+        "name": "regain"
+      },
+      "roamsfiest": {
+        "rank": 169,
+        "points": 779.8,
+        "region": "EU",
+        "name": "roamsfiest"
+      },
+      "esport berg": {
+        "rank": 170,
+        "points": 778.4,
+        "region": "EU",
+        "name": "Esport BERG"
+      },
+      "mibr female": {
+        "rank": 171,
+        "points": 777.5,
+        "region": "AM",
+        "name": "MIBR Female"
+      },
+      "red canids": {
+        "rank": 172,
+        "points": 771.5,
+        "region": "AM",
+        "name": "RED Canids"
+      },
+      "villainous": {
+        "rank": 173,
+        "points": 771.3,
+        "region": "AM",
+        "name": "Villainous"
+      },
+      "uno mille": {
+        "rank": 174,
+        "points": 771.2,
+        "region": "AM",
+        "name": "UNO MILLE"
+      },
+      "sangal esports": {
+        "rank": 175,
+        "points": 768.2,
+        "region": "EU",
+        "name": "Sangal Esports"
+      },
+      "kaleido gaming": {
+        "rank": 176,
+        "points": 766.5,
+        "region": "AS",
+        "name": "Kaleido Gaming"
+      },
+      "falcons force": {
+        "rank": 177,
+        "points": 763.3,
+        "region": "EU",
+        "name": "Falcons Force"
+      },
+      "nutorious": {
+        "rank": 178,
+        "points": 761.7,
+        "region": "AM",
+        "name": "NuTorious"
+      },
+      "borracheiros": {
+        "rank": 179,
+        "points": 759,
+        "region": "AM",
+        "name": "BORRACHEIROS"
+      },
+      "semperfi esports": {
+        "rank": 180,
+        "points": 759,
+        "region": "AS",
+        "name": "SemperFi Esports"
+      },
+      "rooster": {
+        "rank": 181,
+        "points": 758.3,
+        "region": "AS",
+        "name": "Rooster"
+      },
+      "misa esports": {
+        "rank": 182,
+        "points": 758.2,
+        "region": "EU",
+        "name": "Misa Esports"
+      },
+      "saw youngsters": {
+        "rank": 183,
+        "points": 756.5,
+        "region": "EU",
+        "name": "SAW Youngsters"
+      },
+      "mindfreak": {
+        "rank": 184,
+        "points": 754.9,
+        "region": "AS",
+        "name": "Mindfreak"
+      },
+      "mai tai": {
+        "rank": 185,
+        "points": 754.3,
+        "region": "EU",
+        "name": "Mai tai"
+      },
+      "the unit": {
+        "rank": 187,
+        "points": 754.2,
+        "region": "AS",
+        "name": "THE UNIT"
+      },
+      "aimclub": {
+        "rank": 188,
+        "points": 753.3,
+        "region": "EU",
+        "name": "Aimclub"
+      },
+      "bebop": {
+        "rank": 189,
+        "points": 753.1,
+        "region": "EU",
+        "name": "Bebop"
+      },
+      "algo esports": {
+        "rank": 190,
+        "points": 752.9,
+        "region": "EU",
+        "name": "ALGO Esports"
+      },
+      "mibr academy": {
+        "rank": 191,
+        "points": 750.3,
+        "region": "AM",
+        "name": "MIBR Academy"
+      },
+      "new vision": {
+        "rank": 192,
+        "points": 749,
+        "region": "EU",
+        "name": "NEW VISION"
+      },
+      "entropy gaming": {
+        "rank": 193,
+        "points": 741,
+        "region": "EU",
+        "name": "Entropy Gaming"
+      },
+      "hashiras": {
+        "rank": 194,
+        "points": 739.9,
+        "region": "EU",
+        "name": "Hashiras"
+      },
+      "megoshort": {
+        "rank": 195,
+        "points": 736.4,
+        "region": "EU",
+        "name": "megoshort"
+      },
+      "team abyssal": {
+        "rank": 197,
+        "points": 730.3,
+        "region": "AS",
+        "name": "Team Abyssal"
+      },
+      "donstu esports": {
+        "rank": 198,
+        "points": 727.6,
+        "region": "EU",
+        "name": "DONSTU Esports"
+      },
+      "alter ego": {
+        "rank": 199,
+        "points": 724.2,
+        "region": "AS",
+        "name": "Alter Ego"
+      },
+      "ex-against all authority": {
+        "rank": 200,
+        "points": 723,
+        "region": "EU",
+        "name": "ex-against All authority"
+      },
+      "tdk": {
+        "rank": 201,
+        "points": 722.2,
+        "region": "EU",
+        "name": "TDK"
+      },
+      "brazylijski luz": {
+        "rank": 202,
+        "points": 719.8,
+        "region": "EU",
+        "name": "brazylijski luz"
+      },
+      "young ninjas": {
+        "rank": 203,
+        "points": 719.1,
+        "region": "EU",
+        "name": "Young Ninjas"
+      },
+      "rare atom": {
+        "rank": 204,
+        "points": 717.3,
+        "region": "AS",
+        "name": "Rare Atom"
+      },
+      "chinggis warriors": {
+        "rank": 205,
+        "points": 716.1,
+        "region": "AS",
+        "name": "Chinggis Warriors"
+      },
+      "club 333": {
+        "rank": 206,
+        "points": 716.1,
+        "region": "AM",
+        "name": "Club 333"
+      },
+      "wazabi": {
+        "rank": 207,
+        "points": 715.6,
+        "region": "EU",
+        "name": "WAZABI"
+      }
+    },
+    "updatedAt": 1788759297803,
+    "stampSrc": "page",
+    "changedAt": 1789344000000
+  },
+  "mapPool": {
+    "LIVE0": [
+      {
+        "a": "NAVI",
+        "b": "FaZe",
+        "bestof": 3,
+        "games": [
+          {
+            "map": "Ancient"
+          },
+          {
+            "map": "Mirage"
+          },
+          {
+            "map": "Inferno"
+          }
+        ],
+        "at": 0
+      }
+    ],
+    "UP0": [
+      {
+        "a": "9 Pandas",
+        "b": "B8",
+        "bestof": 3,
+        "games": [
+          {
+            "map": "Mirage"
+          },
+          {
+            "map": "Nuke"
+          },
+          {
+            "map": "Ancient"
+          }
+        ],
+        "at": 0
+      }
+    ]
+  },
+  "liveAnchorMin": 137
+}

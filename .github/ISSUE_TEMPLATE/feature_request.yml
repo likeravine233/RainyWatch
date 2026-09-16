@@ -1,0 +1,21 @@
+name: 功能建议 / Feature request
+description: 想要的新功能或体验改进 / New features or UX improvements
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        感谢建议!描述清楚功能与场景,合理可行的话会排进开发计划。
+        Thanks for the suggestion! Describe the feature and when you'd use it; solid ideas get scheduled.
+  - type: textarea
+    id: idea
+    attributes:
+      label: 想要什么功能 / What feature
+      description: 功能与你期望的交互方式 / The feature and how you expect it to work
+    validations:
+      required: true
+  - type: textarea
+    id: scenario
+    attributes:
+      label: 使用场景(可选) / Use case (optional)
+      description: 什么情况下会用到 / When would you use it

@@ -1,0 +1,54 @@
+{
+  "name": "rainywatch-lite",
+  "productName": "RainyWatch",
+  "version": "0.0.1",
+  "description": "RainyWatch · 小暴雨助手 — CS2 桌面赛况小助手",
+  "main": "main.js",
+  "author": "likeravine233",
+  "license": "AGPL-3.0-only",
+  "scripts": {
+    "start": "electron .",
+    "dist": "node _dev/build.js"
+  },
+  "devDependencies": {
+    "electron": "^33.0.0",
+    "electron-builder": "^25.1.8"
+  },
+  "dependencies": {
+    "cheerio": "^1.0.0",
+    "koffi": "^3.2.1"
+  },
+  "build": {
+    "appId": "local.rainywatch.lite",
+    "productName": "RainyWatch",
+    "directories": {
+      "output": "dist-release3"
+    },
+    "asarUnpack": [
+      "node_modules/koffi/**"
+    ],
+    "files": [
+      "main.js",
+      "preload.js",
+      "src/**/*",
+      "lib/**/*",
+      "assets/**/*",
+      "package.json",
+      "_dev/mock-data.json"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "assets/icon.png"
+    },
+    "portable": {
+      "artifactName": "RainyWatch-Portable.exe"
+    }
+  }
+}

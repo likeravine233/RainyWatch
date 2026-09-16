@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self'; img-src 'self' https://liquipedia.net https://cdn-api.pandascore.co data:; style-src 'self' 'unsafe-inline'; script-src 'self'; font-src 'self' data:">
+  <title>小暴雨助手 · RainyWatch</title>
+  <!-- MiSans(小米免费商用字体,按 unicode-range 切片,只加载用到的字块) -->
+  <link rel="stylesheet" href="fonts/misans/MiSans-Regular.min.css">
+  <link rel="stylesheet" href="fonts/misans/MiSans-Medium.min.css">
+  <link rel="stylesheet" href="fonts/misans/MiSans-Demibold.min.css">
+  <link rel="stylesheet" href="fonts/misans/MiSans-Bold.min.css">
+  <!-- 思源黑体 Noto Sans SC(OFL,按 unicode-range 切片;未选中该字体时不产生任何加载) -->
+  <link rel="stylesheet" href="fonts/notosans/noto-sans-sc.min.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body data-theme="clear">
+  <div id="app">
+    <!-- 取景玻璃:渲染层直采桌面视频流画到 #glass-video,自绘高斯模糊/折射(不依赖 DWM 背板) -->
+    <div id="glass-bg" aria-hidden="true"><video id="glass-video" autoplay muted playsinline disablepictureinpicture></video></div>
+    <div id="glass-shade" aria-hidden="true"></div>
+    <div id="glass-edge" aria-hidden="true"></div>
+    <!-- 胶片带×图像带交替背景(队色对撞主题专用;条数由 renderer 的 vhsBuild 自动推导) -->
+    <div class="vhs" id="vhs" aria-hidden="true"><div class="deck"></div></div>
+    <!-- 标题栏(拖拽区) -->
+    <header id="titlebar">
+      <span class="brand"><span class="brand-dot"></span><span class="brand-name" data-i18n="brand.name">小暴雨助手</span><span class="brand-en">RAINYWATCH</span><span class="brand-ver" id="brand-ver"></span></span>
+      <span class="sync-pill"><span id="sync-dot" class="sync-dot ok" title="同步正常 · 点击刷新" data-i18n-title="sync.dot"></span><span id="updated">…</span></span>
+      <div class="tb-actions">
+        <button id="upd-badge" class="tb-btn upd-badge hidden" title="发现新版本,点击查看" data-i18n-title="upd.badge.tip">
+          <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">
+            <path d="M8 13V5m0 0 3.2 3.2M8 5 4.8 8.2M3.5 2.5h9" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+        <button id="btn-mini" class="tb-btn" title="切换迷你模式" data-i18n-title="btn.mini" aria-pressed="false">
+          <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">
+            <rect x="2" y="3.5" width="12" height="9" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.4"/>
+            <line x1="2" y1="9" x2="14" y2="9" stroke="currentColor" stroke-width="1.4"/>
+          </svg>
+        </button>
+        <button id="btn-pin" class="tb-btn" title="窗口置顶(快捷切换)" data-i18n-title="btn.pin" aria-pressed="true">
+          <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">
+            <path d="M9.2 2.3c.4-.4 1.1-.4 1.4 0l3.1 3.1c.4.4.4 1 0 1.4l-1.2 1.2-1.4-1.4L7.5 10.2l-1.6 4.3-1.4-1.4-2.1 1 1-2.1-1.4-1.4 4.3-1.6 3.6-3.6-1.4-1.4 1.2-1.2z" fill="currentColor"/>
+          </svg>
+        </button>
+        <button id="btn-settings" class="tb-btn" title="设置" data-i18n-title="btn.settings">
+          <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">
+            <path d="M8 10.2a2.2 2.2 0 1 0 0-4.4 2.2 2.2 0 0 0 0 4.4z" fill="none" stroke="currentColor" stroke-width="1.3"/>
+            <path d="M13.5 8c0-.4 0-.7-.1-1l1.3-1-1.3-2.2-1.5.5c-.5-.4-1-.6-1.6-.8L10 2h-2.6L7.1 3.5c-.6.2-1.1.4-1.6.8L4 3.8 2.7 6l1.3 1c-.1.3-.1.6-.1 1s0 .7.1 1l-1.3 1L4 12.2l1.5-.5c.5.4 1 .6 1.6.8l.3 1.5H10l.3-1.5c.6-.2 1.1-.4 1.6-.8l1.5.5 1.3-2.2-1.3-1c.1-.3.1-.6.1-1z" fill="none" stroke="currentColor" stroke-width="1.1" stroke-linejoin="round"/>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- 主卡:直播中 / 下一场 -->
+    <section id="hero"></section>
+
+    <!-- 标签页 -->
+    <nav id="tabs">
+      <button data-tab="matches" class="tab active" data-i18n="tab.matches">比赛</button>
+      <button data-tab="events" class="tab" data-i18n="tab.events">赛事</button>
+      <button data-tab="transfers" class="tab"><span data-i18n="tab.transfers">变阵</span><span id="tr-badge" class="badge hidden">0</span></button>
+    </nav>
+
+    <section id="tab-matches" class="tab-body"><div id="up-list" class="list"></div></section>
+    <section id="tab-events" class="tab-body hidden"><div id="ev-list" class="list"></div></section>
+    <section id="tab-transfers" class="tab-body hidden"><div id="tr-list" class="list"></div><button class="to-top" data-i18n-title="totop.tip" title="回到顶部">↑</button></section>
+
+    <footer id="footer">
+      <span id="vrs-foot" data-i18n-title="vrs.foot.tip" title="VRS 排名更新日期 · 数据源 Liquipedia">VRS</span>
+      <span class="foot-right">
+        <span id="live-entries">
+          <button class="link wj" data-url="https://www.douyu.com/6657" title="打开玩机器直播间(斗鱼 6657)" data-i18n-title="wj.title">▶ 玩机器</button>
+        </span>
+        <button class="link" data-url="https://www.hltv.org/matches">HLTV</button>
+        <button class="link" data-url="https://liquipedia.net/counterstrike/Liquipedia:Matches">LP</button>
+        <button class="link" data-url="https://pandascore.co" title="Source: PandaScore — 可选比分数据来源" data-i18n-title="panda.foot.tip">PandaScore</button>
+      </span>
+    </footer>
+
+    <!-- 右键菜单:主卡/对阵行(渲染层按语言与主题填充) -->
+    <div id="ctx-menu" role="menu"></div>
+
+    <!-- 设置浮层 -->
+    <div id="settings" class="overlay hidden">
+      <div class="set-head"><span class="set-title"><span data-i18n="set.title">设置</span><span class="set-q" data-tip="数据来源:Liquipedia 开放接口(与 HLTV 数据同源同步)· 点击比赛/赛事/变阵可跳转详情 · 点击主卡比分可复制" data-i18n-tip="set.title.tip">?</span></span><button id="set-close" class="tb-btn">✕</button></div>
+      <div class="set-body">
+        <nav class="set-rail" id="set-rail">
+          <button class="set-nav on" data-stab="general" data-i18n="set.tab.general">通用</button>
+          <button class="set-nav" data-stab="display" data-i18n="set.tab.display">显示</button>
+          <button class="set-nav" data-stab="theme" data-i18n="set.tab.theme">主题</button>
+          <button class="set-nav" data-stab="follow" data-i18n="set.tab.follow">关注</button>
+          <button class="set-nav" data-stab="data" data-i18n="set.tab.data">数据</button>
+          <button class="set-nav" data-stab="about" data-i18n="set.tab.about">关于</button>
+        </nav>
+        <div class="set-scroll" id="set-scroll">
+
+          <section class="set-sec" data-sec="general">
+            <div class="set-sec-h" data-i18n="set.tab.general">通用</div>
+            <div class="set-label"><span data-i18n="set.lb.uilang">界面语言</span><span class="set-q" data-tip="切换界面语言，同时带动赛事文本、地图名、选手角色等全部语言设置；切换后仍可在下方单独调整" data-i18n-tip="set.lb.uilang.tip">?</span></div>
+            <select id="uilang-sel">
+              <option value="zh">中文</option>
+              <option value="en">English</option>
+            </select>
+            <div class="set-label"><span data-i18n="set.lb.fontsize">字号</span><span class="set-q" data-tip="五档缩放全应用文字(主卡/列表/设置/页签/标题栏);迷你条窗口固定不缩放;默认档与原观感完全一致" data-i18n-tip="set.lb.fontsize.tip">?</span></div>
+            <select id="fs-sel">
+              <option value="1" data-i18n="opt.fs.1">特小</option>
+              <option value="2" data-i18n="opt.fs.2">偏小</option>
+              <option value="3" data-i18n="opt.fs.3">标准(默认)</option>
+              <option value="4" data-i18n="opt.fs.4">偏大</option>
+              <option value="5" data-i18n="opt.fs.5">特大</option>
+            </select>
+            <div class="set-label"><span data-i18n="set.lb.zhfont">中文字体</span><span class="set-q" data-tip="只影响汉字;数字与英文仍用各主题的西文字体;切换即时生效并保存,用于对比后定稿一款" data-i18n-tip="set.lb.zhfont.tip">?</span></div>
+            <select id="zhfont-sel">
+              <option value="misans" data-i18n="opt.zh.misans">MiSans</option>
+              <option value="noto" data-i18n="opt.zh.noto">思源黑体 Noto Sans SC(默认)</option>
+              <option value="yahei" data-i18n="opt.zh.yahei">微软雅黑(系统)</option>
+            </select>
+            <div class="set-label"><span data-i18n="set.lb.rowclick">左键点击对阵</span><span class="set-q" data-tip="点击比赛列表里的对阵行时执行的默认操作:无操作=纯浏览、防误触;置顶到主卡=把该场钉上主卡,再点一次取消(赛果行不支持置顶);跳转对阵页=在浏览器打开对阵详情。点击行内的队名、直播间按钮不受此设置影响" data-i18n-tip="set.lb.rowclick.tip">?</span></div>
+            <select id="rowclick-sel">
+              <option value="none" data-i18n="set.rowclick.none">无操作</option>
+              <option value="pin" data-i18n="set.rowclick.pin">置顶到主卡</option>
+              <option value="open" data-i18n="set.rowclick.open">跳转对阵页</option>
+            </select>
+            <div class="set-label"><span data-i18n="set.lb.size">尺寸预设</span><span class="set-q" data-tip="也可以直接拖拽窗口边缘自由调整大小,布局会随尺寸自动增减信息层级" data-i18n-tip="set.lb.size.tip">?</span></div>
+            <div class="theme-cards">
+              <div class="theme-card size-card" data-size-pick="mini" title="一条比分胶囊:当前比分/下一场倒计时" data-i18n-title="size.mini.tip"><div class="prev prev-size prev-size-mini"></div><span data-i18n="size.mini">迷你条</span></div>
+              <div class="theme-card size-card" data-size-pick="s" title="小卡:主卡 + 接下来几场" data-i18n-title="size.s.tip"><div class="prev prev-size prev-size-s"></div><span data-i18n="size.s">小卡</span></div>
+              <div class="theme-card size-card" data-size-pick="m" title="标准:完整页签" data-i18n-title="size.m.tip"><div class="prev prev-size prev-size-m"></div><span data-i18n="size.m">标准</span></div>
+              <div class="theme-card size-card" data-size-pick="l" title="大窗:更多行、更大字号" data-i18n-title="size.l.tip"><div class="prev prev-size prev-size-l"></div><span data-i18n="size.l">大窗</span></div>
+            </div>
+            <div class="set-label"><span data-i18n="set.lb.window">窗口行为</span></div>
+            <label class="row-toggle"><input type="checkbox" id="tg-ontop"><span data-i18n="tg.ontop">窗口置顶</span></label>
+            <label class="row-toggle"><input type="checkbox" id="tg-hidebar"><span data-i18n="tg.hidebar">不占任务栏图标(从托盘唤回)</span></label>
+            <label class="row-toggle"><input type="checkbox" id="tg-autostart"><span data-i18n="tg.autostart">开机自启</span></label>
+          </section>
+
+          <section class="set-sec" data-sec="display">
+            <div class="set-sec-h" data-i18n="set.tab.display">显示</div>
+            <div class="set-label"><span data-i18n="set.lb.evname">赛事名显示</span><span class="set-q" data-tip="赛事名显示：简称（默认）/ 全称（英文原名）/ 中文惯称（基于内置 IEM/BLAST/ESL 等别名表；Liquipedia 无官方中文，未收录的回退原文）" data-i18n-tip="set.lb.evname.tip">?</span></div>
+            <select id="ev-name-sel">
+              <option value="abbr" data-i18n="opt.evname.abbr">简称(IEM Cologne 2026 → IEM Cologne)</option>
+              <option value="full" data-i18n="opt.evname.full">全称(原名)</option>
+              <option value="zh" data-i18n="opt.evname.zh">中文惯称(IEM Cologne → IEM 科隆)</option>
+            </select>
+            <div class="set-label"><span data-i18n="set.lb.date">日期显示</span></div>
+            <select id="date-fmt-sel">
+              <option value="smart" data-i18n="opt.date.smart">智能(今天 / 明天 / 周六)</option>
+              <option value="weekday" data-i18n="opt.date.weekday">周几优先(周六 14:00)</option>
+              <option value="date" data-i18n="opt.date.date">具体日期(09-12 14:00)</option>
+            </select>
+            <div class="set-label"><span data-i18n="set.lb.uptime">开赛时间显示</span><span class="set-q" data-tip="列表里即将开始场次的时间:A=只看开赛时刻;B=临近 1 小时内换成倒计时;A·B=临近时显示「倒计时 · 时刻」,两个都看得到" data-i18n-tip="set.lb.uptime.tip">?</span></div>
+            <select id="upcoming-time-sel">
+              <option value="start" data-i18n="opt.uptime.start">A · 只看时刻(今天 14:00)</option>
+              <option value="cd" data-i18n="opt.uptime.cd">B · 临近换倒计时(00:34:14 后)</option>
+              <option value="both" data-i18n="opt.uptime.both">A·B · 临近时都显示(00:34:14 后 · 14:00)</option>
+            </select>
+            <div class="set-label"><span data-i18n="set.lb.timezone">比赛时间时区</span><span class="set-q" data-tip="所有比赛时刻(开赛时间、日期)按所选时区显示;默认跟随本机时区,夏令时自动处理;想按赛事当地或其他时区对照时手动切换" data-i18n-tip="set.lb.timezone.tip">?</span></div>
+            <select id="tz-sel">
+              <option value="" data-i18n="opt.tz.auto">自动(本机时区)</option>
+              <option value="UTC" data-i18n="opt.tz.utc">UTC</option>
+              <option value="Asia/Shanghai" data-i18n="opt.tz.shanghai">北京</option>
+              <option value="Asia/Tokyo" data-i18n="opt.tz.tokyo">东京</option>
+              <option value="Asia/Seoul" data-i18n="opt.tz.seoul">首尔</option>
+              <option value="Asia/Singapore" data-i18n="opt.tz.singapore">新加坡</option>
+              <option value="Australia/Sydney" data-i18n="opt.tz.sydney">悉尼</option>
+              <option value="Europe/Moscow" data-i18n="opt.tz.moscow">莫斯科</option>
+              <option value="Europe/Berlin" data-i18n="opt.tz.berlin">柏林</option>
+              <option value="Europe/London" data-i18n="opt.tz.london">伦敦</option>
+              <option value="America/New_York" data-i18n="opt.tz.newyork">纽约</option>
+              <option value="America/Los_Angeles" data-i18n="opt.tz.la">洛杉矶</option>
+            </select>
+            <div class="set-label"><span data-i18n="set.lb.lang">赛事文本语言</span><span class="set-q" data-tip="比赛相关文本的语言：状态词、阶段（第N图/加时/赛点）、赛事名结构词等；随界面语言联动，也可在此单独调整" data-i18n-tip="set.lb.lang.tip">?</span></div>
+            <select id="lang-sel">
+              <option value="zh">中文(Group B → 小组赛B组)</option>
+              <option value="en">原文(English)</option>
+            </select>
+            <div class="set-label"><span data-i18n="set.lb.maplang">地图名显示</span><span class="set-q" data-tip="全称取完美世界国服官方译名,简称是玩家圈惯用叫法;图名随数据源下发后生效(当前免费档无图名,显示&quot;第N图&quot;)" data-i18n-tip="set.lb.maplang.tip">?</span></div>
+            <select id="map-lang-sel">
+              <option value="zh" data-i18n="opt.map.zh">中文全称(荒漠迷城 / 炼狱小镇)</option>
+              <option value="zhShort" data-i18n="opt.map.zhShort">中文简称(米垃圾 / 小镇 / 沙二)</option>
+              <option value="en" data-i18n="opt.map.en">英文原名(Mirage / Inferno)</option>
+            </select>
+            <div class="set-label"><span data-i18n="set.lb.mapstrip">地图信息显示</span><span class="set-q" data-tip="主卡在打图的地图信息:图序带会同时展示前图/当前图/下张的 BP 顺序;只显示当前图则仅保留一行「第N图 · 图名」" data-i18n-tip="set.lb.mapstrip.tip">?</span></div>
+            <select id="map-strip-sel">
+              <option value="band" data-i18n="opt.strip.band">图序带(前图 · 当前 · 下张)</option>
+              <option value="cur" data-i18n="opt.strip.cur">只显示当前图(第N图 · 图名)</option>
+            </select>
+            <div class="set-label"><span data-i18n="set.lb.rolelang">选手角色显示</span><span class="set-q" data-tip="变阵列表选手名旁的角色/状态标注(Coach、benched、Stand-in 等)来自 Liquipedia;常见词翻译,未收录的保持原文" data-i18n-tip="set.lb.rolelang.tip">?</span></div>
+            <select id="role-lang-sel">
+              <option value="zh" data-i18n="opt.role.zh">中文(教练 / 退役 / 替补)</option>
+              <option value="en" data-i18n="opt.role.en">原文(Coach / Retired / Stand-in)</option>
+            </select>
+            <div class="set-label"><span data-i18n="set.lb.storystyle">变阵解说风格</span><span class="set-q" data-tip="变阵条目悬停时浮现的一句话解说:专业=标准转会措辞;诙谐=社区梗(板凳、感谢服役)" data-i18n-tip="set.lb.storystyle.tip">?</span></div>
+            <select id="story-style-sel">
+              <option value="pro" data-i18n="opt.story.pro">专业(转会 / 替补席)</option>
+              <option value="fun" data-i18n="opt.story.fun">诙谐(板凳梗 / 感谢服役)</option>
+            </select>
+          </section>
+
+          <section class="set-sec" data-sec="theme">
+            <div class="set-sec-h" data-i18n="set.tab.theme">主题</div>
+            <div class="set-label"><span data-i18n="set.lb.theme">主题</span></div>
+            <div class="theme-cards">
+              <div class="theme-card" data-theme-pick="blue"><div class="prev prev-blue"></div><span data-i18n="th.blue">蓝色平台</span></div>
+              <div class="theme-card" data-theme-pick="tactical"><div class="prev prev-tactical"></div><span data-i18n="th.tactical">战术沙盘</span></div>
+            </div>
+            <div class="theme-cards">
+              <div class="theme-card" data-theme-pick="clear"><div class="prev prev-clear"></div><span data-i18n="th.clear">透明</span></div>
+              <div class="theme-card" data-theme-pick="versus"><div class="prev prev-versus"></div><span data-i18n="th.versus">队色对撞</span></div>
+              <div class="theme-card" data-theme-pick="crt"><div class="prev prev-crt"></div><span data-i18n="th.crt">磷光终端</span></div>
+              <div class="theme-card" data-theme-pick="poster"><div class="prev prev-poster"></div><span data-i18n="th.poster">期刊海报</span></div>
+              <div class="theme-card" data-theme-pick="printstream"><div class="prev prev-printstream"></div><span data-i18n="th.printstream">印花集</span></div>
+            </div>
+            <div class="theme-fb"><span class="tf-ic">⚡</span><a id="fb-theme" data-i18n="set.themefb">这套主题显示有问题?报告它</a><span class="set-q" data-tip="直达「界面/主题问题」表单:当前主题、窗口、字号等环境信息会自动附上;截图在提交后拖进正文即可" data-i18n-tip="set.themefb.tip">?</span></div>
+            <div class="set-label"><span data-i18n="set.lb.fx">动效</span><span class="set-q" data-tip="当前主题的氛围与交互动效,可逐个关闭;「性能优先」开启时全部停用,系统"减少动态效果"时也会自动停用" data-i18n-tip="set.lb.fx.tip">?</span></div>
+            <label class="row-toggle"><input type="checkbox" id="tg-lowpower"><span data-i18n="tg.lowpower.lite">性能优先(关氛围动效,失焦暂停动画)</span></label>
+            <div id="fx-list"></div>
+            <div class="set-label"><span data-i18n="set.lb.opacity">不透明度</span> <span id="op-val">100%</span></div>
+            <input type="range" id="op-slider" min="40" max="100" step="5">
+          </section>
+
+          <section class="set-sec" data-sec="follow">
+            <div class="set-sec-h" data-i18n="set.tab.follow">关注</div>
+            <div class="set-label"><span data-i18n="set.lb.stars">高光选手 / 关注队伍</span><span class="set-q" data-tip="提示:比赛列表和变阵列表中,把鼠标放到名字上会显示 ★ 可直接关注" data-i18n-tip="set.lb.stars.tip">?</span></div>
+            <div class="star-add">
+              <input type="text" id="star-search" placeholder="搜索选手添加高光,如 ZywOo / s1mple" data-i18n-ph="star.search.ph" autocomplete="off">
+              <div id="star-sugs" class="sugs hidden"></div>
+            </div>
+            <div id="star-players" class="star-list"></div>
+            <div id="star-teams" class="star-list"></div>
+            <div class="set-label"><span data-i18n="set.lb.notify">提醒</span></div>
+            <label class="row-toggle"><input type="checkbox" id="tg-prematch"><span data-i18n="tg.prematch">开赛前提醒</span></label>
+            <div class="prematch-opts">
+              <select id="prematch-min">
+                <option value="5" data-i18n="opt.pre.5">提前 5 分钟</option>
+                <option value="10" data-i18n="opt.pre.10">提前 10 分钟</option>
+                <option value="15" data-i18n="opt.pre.15">提前 15 分钟</option>
+                <option value="30" data-i18n="opt.pre.30">提前 30 分钟</option>
+              </select>
+              <label class="row-toggle inline"><input type="checkbox" id="tg-prematch-starred"><span data-i18n="tg.prematch.starred">仅关注的比赛</span></label>
+            </div>
+            <label class="row-toggle"><input type="checkbox" id="tg-results"><span data-i18n="tg.results">赛果速报(看过的直播比赛结束推送)</span></label>
+            <label class="row-toggle"><input type="checkbox" id="tg-notify"><span data-i18n="tg.notify">变阵提醒(系统通知)</span></label>
+          </section>
+
+          <section class="set-sec" data-sec="data">
+            <div class="set-sec-h" data-i18n="set.tab.data">数据</div>
+            <div class="set-label"><span data-i18n="set.lb.live2">回合级实时比分(可选增强)</span><span class="set-q" data-tip="配置后,直播中的比赛将显示当前地图回合比分与&quot;第X回合&quot;;不配置仅显示图数比分" data-i18n-tip="set.lb.live2.tip">?</span></div>
+            <div class="star-add token-field"><input type="password" id="panda-token" placeholder="PandaScore Token — pandascore.co 免费申请" data-i18n-ph="panda.token.ph" autocomplete="off" spellcheck="false"><button type="button" id="panda-eye" title="显示/隐藏 Token" data-i18n="panda.show">显示</button></div>
+            <div class="set-note inline" id="panda-note" hidden></div>
+            <div class="set-label"><span data-i18n="set.lb.twitch">Twitch 开播检测(英文解说)</span><span class="set-q" data-tip="英文主播(ESL/BLAST 等)的开播绿点走 Twitch 官方接口,需要你自己的免费凭证:打开 dev.twitch.tv/console(普通 Twitch 账号即可,需先完成邮箱验证并开启两步验证 2FA)→ Register Your Application(名字随意,类别选 Application,OAuth 回调地址填 http://localhost)→ 创建后复制 Client ID,再点 New Secret 生成密钥,分别粘贴到下面两栏。凭证仅保存在本机;未配置时不检测英文主播开播,也绝不访问 Twitch 页面" data-i18n-tip="set.lb.twitch.tip">?</span></div>
+            <div class="star-add token-field"><input type="text" id="twitch-id" placeholder="Twitch Client ID — dev.twitch.tv/console 免费 创建" data-i18n-ph="twitch.id.ph" autocomplete="off" spellcheck="false"></div>
+            <div class="star-add token-field"><input type="password" id="twitch-secret" placeholder="Twitch Client Secret — 应用页 New Secret 生成" data-i18n-ph="twitch.secret.ph" autocomplete="off" spellcheck="false"><button type="button" id="twitch-eye" title="显示/隐藏 Secret" data-i18n="panda.show">显示</button></div>
+            <div class="set-label"><span data-i18n="set.lb.interval">刷新间隔(比赛)</span><span class="set-q" data-tip="比赛列表自动刷新的频率；越小越实时、越耗电，直播中会自动临时加快；一般保持默认即可" data-i18n-tip="set.lb.interval.tip">?</span></div>
+            <select id="interval-sel">
+              <option value="1" data-i18n="opt.interval.1">1 分钟(直播中自动加快)</option>
+              <option value="2" data-i18n="opt.interval.2">2 分钟</option>
+              <option value="3" data-i18n="opt.interval.3">3 分钟</option>
+              <option value="5" data-i18n="opt.interval.5">5 分钟</option>
+              <option value="10" data-i18n="opt.interval.10">10 分钟</option>
+            </select>
+            <div class="set-label"><span data-i18n="set.lb.vrs">VRS 排名更新</span><span class="set-q" data-tip="VRS 是 Valve 官方区域排名:官方约每月发布一期(临近 Major 预选会加密更新),发布时不包含进行中的比赛;Liquipedia 跟随官方同步,通常有数小时到一天延迟;本组件每 6 小时自动核对一次,这里显示的是数据最后一次变动的时间——刚结束的比赛对排名的影响,要等官方下一期发布才会体现。若该时间明显晚于官方最新发布,请点击下方「排名不准?反馈」" data-i18n-tip="set.lb.vrs.tip">?</span></div>
+            <div class="vrs-stamp"><span id="vrs-updated">—</span><a id="vrs-fb" data-i18n="set.vrs.fb">排名不准?反馈</a></div>
+          </section>
+
+          <!-- 关于:徽记 + 版本(每版一个中文代号)+ 本版寄语(发版工序登记)+ 入口 -->
+          <section class="set-sec" data-sec="about">
+            <div class="set-sec-h" data-i18n="set.tab.about">关于</div>
+            <div class="about-hero">
+              <img src="../assets/icon.png" alt="" width="44" height="44">
+              <div class="about-id">
+                <div class="about-name"><span translate="no">RainyWatch</span><span class="about-cn" data-i18n="about.tag">小暴雨助手</span></div>
+                <div class="about-ver-row"><span class="about-ver" id="about-ver">RainyWatch</span><span class="about-code" id="about-code" hidden></span><span class="upd-state" id="upd-state"></span></div>
+                <div class="about-sign" id="about-sign"></div>
+              </div>
+            </div>
+            <blockquote class="about-quote" id="about-quote-box" hidden>
+              <p id="about-quote"></p>
+            </blockquote>
+            <div class="about-actions">
+              <button id="btn-upd-check" class="mini-btn" data-i18n="upd.check">检查更新</button>
+              <button id="btn-open-github" class="mini-btn" data-i18n="upd.github">GitHub 仓库</button>
+              <button id="btn-feedback" class="mini-btn" data-i18n="set.feedback">反馈与支持</button>
+            </div>
+          </section>
+        </div>
+      </div>
+      <div class="set-foot">
+        <button id="btn-unlock" class="mini-btn" data-i18n="btn.unlock">解除穿透锁定</button>
+        <button id="btn-quit" class="mini-btn danger" data-i18n="btn.quit">退出应用</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 更新弹窗:应用内自绘(七主题各自皮肤,水月立绘弹出后缓缓浮动);窗口不可见/穿透锁定/迷你时主进程回落原生弹窗。
+       挂在 #app 外层:弹窗出现时 #app 整体模糊化突出弹窗,自身不受滤镜影响 -->
+  <div id="upd" class="upd-overlay hidden">
+      <div class="upd-card" role="dialog">
+        <button id="upd-close" class="upd-x" title="暂不" data-i18n-title="upd.dlg.later">✕</button>
+        <div class="upd-girl"><img src="../assets/shuiyue.png" alt=""></div>
+        <div class="upd-girl g2"><img src="../assets/shuiyue2.png" alt=""></div>
+        <div class="upd-kicker">UPDATE</div>
+        <div class="upd-title" data-i18n="upd.dlg.title">发现新版本</div>
+        <div class="upd-ver">v<b id="upd-ver"></b></div>
+        <div class="upd-code hidden" id="upd-code"></div>
+        <div class="upd-quote hidden" id="upd-quote"></div>
+        <div class="upd-msg" data-i18n="upd.dlg.body">新版本已发布,去 GitHub 看看更新内容?</div>
+        <div class="upd-actions">
+          <button id="upd-install" class="upd-btn hidden" data-i18n="upd.dlg.install">一键更新</button>
+          <button id="upd-go" class="upd-btn" data-i18n="upd.dlg.go">前往 GitHub</button>
+          <button id="upd-later" class="upd-btn ghost" data-i18n="upd.dlg.later">暂不</button>
+        </div>
+      </div>
+    </div>
+  <script src="teamcolors.js"></script>
+  <script src="phase.js"></script>
+  <script src="fx.js"></script>
+  <script src="i18n.js"></script>
+  <script src="renderer.js"></script>
+</body>
+</html>
