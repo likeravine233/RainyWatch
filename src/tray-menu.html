@@ -61,6 +61,8 @@
       : it.type === 'star'
         ? '<div class="star-row" data-id="star"><div class="tip"><span class="zh">觉得好用?请帮我点个免费的 <b>Star ★</b> 支持一下!</span><span class="en">Enjoy it? A free <b>Star ★</b> helps a lot!</span></div><div class="peek"><img src="../assets/tray-star.png" alt=""></div></div>'
         : '<div class="mi' + (it.checked ? ' on' : '') + '" data-id="' + it.id + '"><span class="chk">✓</span><span class="lb">' + it.label + '</span></div>').join('');
+    // 画完回执:主进程收到才落位 show(先画后弹,杜绝空壳先闪一帧);双 rAF 确保一帧已产出
+    requestAnimationFrame(() => requestAnimationFrame(() => trayapi.ready()));
   });
   document.addEventListener('click', (e) => { const mi = e.target.closest('.mi'); if (mi) trayapi.click(mi.dataset.id); const st = e.target.closest('.star-row'); if (st) trayapi.click(st.dataset.id); });
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape') trayapi.hide(); });

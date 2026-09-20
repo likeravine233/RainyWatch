@@ -186,6 +186,19 @@
               <option value="band" data-i18n="opt.strip.band">图序带(前图 · 当前 · 下张)</option>
               <option value="cur" data-i18n="opt.strip.cur">只显示当前图(第N图 · 图名)</option>
             </select>
+            <div class="set-label"><span data-i18n="set.lb.bo1score">BO1 比分显示</span><span class="set-q" data-tip="LP 对 BO1 赛果印地图小分(7-13,更详细),PandaScore 补位行只有系列比分(1-0):小分优先=有小分就显示小分;统一大比分=BO1 全表按系列比分显示" data-i18n-tip="set.lb.bo1score.tip">?</span></div>
+            <select id="bo1-score-sel">
+              <option value="raw" data-i18n="opt.bo1.raw">小分优先(更详细;补位行回落大比分)</option>
+              <option value="series" data-i18n="opt.bo1.series">统一大比分(全表一致)</option>
+            </select>
+            <div class="set-label"><span data-i18n="set.lb.mintier">赛事级别过滤</span><span class="set-q" data-tip="只显示所选级别及以上的比赛,改动即时生效;无级别信息的赛事在非「所有赛事」档下隐藏。仅影响显示,不会清理任何数据;主卡置顶的比赛不受过滤影响" data-i18n-tip="set.lb.mintier.tip">?</span></div>
+            <select id="min-tier-sel">
+              <option value="all" data-i18n="opt.tier.all">所有赛事</option>
+              <option value="C" data-i18n="opt.tier.c">C 级及以上</option>
+              <option value="B" data-i18n="opt.tier.b">B 级及以上</option>
+              <option value="A" data-i18n="opt.tier.a">A 级及以上</option>
+              <option value="S" data-i18n="opt.tier.s">仅 S 级</option>
+            </select>
             <div class="set-label"><span data-i18n="set.lb.rolelang">选手角色显示</span><span class="set-q" data-tip="变阵列表选手名旁的角色/状态标注(Coach、benched、Stand-in 等)来自 Liquipedia;常见词翻译,未收录的保持原文" data-i18n-tip="set.lb.rolelang.tip">?</span></div>
             <select id="role-lang-sel">
               <option value="zh" data-i18n="opt.role.zh">中文(教练 / 退役 / 替补)</option>
@@ -216,6 +229,23 @@
             <div class="set-label"><span data-i18n="set.lb.fx">动效</span><span class="set-q" data-tip="当前主题的氛围与交互动效,可逐个关闭;「性能优先」开启时全部停用,系统"减少动态效果"时也会自动停用" data-i18n-tip="set.lb.fx.tip">?</span></div>
             <label class="row-toggle"><input type="checkbox" id="tg-lowpower"><span data-i18n="tg.lowpower.lite">性能优先(关氛围动效,失焦暂停动画)</span></label>
             <div id="fx-list"></div>
+            <div class="set-label"><span data-i18n="set.lb.vfps">视觉帧率上限</span> <span class="set-q" data-tip="整个窗口全部视觉动效的最高更新频率——包括 WebGL 波形、CSS 循环动画、hover 辉光与过渡;任何模式下都不会超过此值;「不限制」=按显示器刷新率跑。推荐搭配「灵活模式」:在窗口上时交互跑满上限,移开回落保底帧率省占用" data-i18n-tip="set.lb.vfps.tip">?</span></div>
+            <select id="vfps-sel">
+              <option value="0" data-i18n="set.vfps.unlimited">不限制</option>
+              <option value="240">240 FPS</option>
+              <option value="165">165 FPS</option>
+              <option value="90">90 FPS</option>
+              <option value="60">60 FPS</option>
+              <option value="30">30 FPS</option>
+            </select>
+            <label class="row-toggle"><input type="checkbox" id="tg-flex"><span data-i18n="tg.flex">灵活模式(在窗口上时跑到上限,移开回落保底帧率)</span></label>
+            <div class="set-label"><span data-i18n="set.lb.idlefps">保底帧率(灵活模式)</span> <span class="set-q" data-tip="灵活模式开启时,光标离开窗口后动效的播放帧率;不会高于「视觉帧率上限」,最低 15 FPS" data-i18n-tip="set.lb.idlefps.tip">?</span></div>
+            <select id="idlefps-sel">
+              <option value="15">15 FPS</option>
+              <option value="24">24 FPS</option>
+              <option value="30">30 FPS</option>
+              <option value="60">60 FPS</option>
+            </select>
             <div class="set-label"><span data-i18n="set.lb.opacity">不透明度</span> <span id="op-val">100%</span></div>
             <input type="range" id="op-slider" min="40" max="100" step="5">
           </section>
@@ -225,6 +255,7 @@
             <div class="set-label"><span data-i18n="set.lb.stars">高光选手 / 关注队伍</span><span class="set-q" data-tip="提示:比赛列表和变阵列表中,把鼠标放到名字上会显示 ★ 可直接关注" data-i18n-tip="set.lb.stars.tip">?</span></div>
             <div class="star-add">
               <input type="text" id="star-search" placeholder="搜索选手添加高光,如 ZywOo / s1mple" data-i18n-ph="star.search.ph" autocomplete="off">
+              <button id="star-search-go" class="search-go" data-i18n-tip="star.search.go" title="搜索">🔍</button>
               <div id="star-sugs" class="sugs hidden"></div>
             </div>
             <div id="star-players" class="star-list"></div>
@@ -316,6 +347,7 @@
   <script src="teamcolors.js"></script>
   <script src="phase.js"></script>
   <script src="fx.js"></script>
+  <script src="visualclock.js"></script>
   <script src="i18n.js"></script>
   <script src="renderer.js"></script>
 </body>

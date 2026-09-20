@@ -58,9 +58,11 @@ RainyWatch(小暴雨助手)是一个挂在桌面角落的 CS2 赛况悬浮窗:�
 - **即将开始**:比赛时刻可切换时区(默认跟随本机,夏令时自动处理),临近 1 小时自动换倒计时("00:17 后 · 今天 23:47"),日期显示格式可调
 - **最近赛果**:胜负着色、回放入口、行内标注"N 小时前结束"(在场观测到的为精确值,否则以"约"估算)
 - **弃赛显示**:弃赛场按数据源原样给出 **FF / W** 比分牌(W = 不战而胜的一方),弃赛队伍名旁挂「弃赛」小旗标,开赛时间与"N 小时前"照常显示
-- **图序条**:Liquipedia 收录了 BP 的场次,行内直接展示整条地图顺序(远古遗迹 → 荒漠迷城 → 炼狱小镇)
+- **图序条**:Liquipedia 收录了 BP 的场次,行内直接展示整条地图顺序(远古遗迹 → 荒漠迷城 → 炼狱小镇);**直播中的比赛同样显示——当前图高亮、已打图变暗**。右列赛事/时间等文本过长时向左渐隐、悬停浮出完整内容,列表内不出现省略号
 - **V# 徽章**:队名旁标注 Valve 全球排名(VRS 前 200),排名更高一侧绿色高亮;主卡队标下方同样有。排名来自 **VRS(Valve 官方区域排名)**:官方约每月发布一期(临近 Major 预选会加密发布),且不含进行中的比赛;应用经 Liquipedia 跟随同步,通常滞后官方数小时到一天,每 6 小时自动核对一次,页脚显示数据标注的更新日期
 - **赛事评级徽标**:S / A / B / C 级(Liquipedia tier)
+- **赛事级别过滤**(设置 → 显示):只看 C / B / A 级及以上或仅 S 级,切换即时生效;置顶到主卡的比赛不受过滤影响,过滤仅影响显示、不动任何缓存数据;无评级信息的赛事在非「所有赛事」档下不显示
+- **BO1 比分口径**(设置 → 显示):「小分优先」显示可获得的地图小分(如 7-13,最详细;PandaScore 补位行回落系列比分);「统一大比分」全表按系列比分(1-0)显示,口径一致
 - **★ 关注队伍与高光选手**:比赛行队伍名旁、变阵行选手旁的 ★ 一键关注,或设置面板搜索选手添加;命中关注的比赛**整行高亮并置顶排序**,鼠标悬停该行时向下舒展一行,露出「★ 队伍 FaZe · ropz 在阵」式关注标注;开赛前 5/10/15/30 分钟可弹系统提醒,关注的比赛结束推送赛果速报;PandaScore 与 Liquipedia 的队名差异(全名 vs 缩写)会自动对齐,NAVI 这类短写队伍也不会漏置顶
 - 列表分区(即将开始/最近赛果)可独立折叠,小窗口也能同屏看两个区块
 
@@ -132,6 +134,7 @@ RainyWatch 常驻桌面、窗口置顶,带有持续的环境动效,透明窗体�
 
 - **「性能优先」**(设置 → 主题):一键停用全部氛围动效,窗口失焦时自动暂停动画,空闲占用接近静止
 - **动效逐项开关**(设置 → 主题):对撞波(WebGL)、底片动画、队色辉光(悬停)、战术扫光……按主题逐项列出,即点即生效;悬停类动效只在鼠标碰到主卡时触发,平时零开销
+- **「视觉帧率上限」**(设置 → 主题):给整个窗口的全部视觉动效——波形、循环动画、悬停辉光、过渡——设一个最高更新频率(不限 / 240 / 165 / 90 / 60 / 30),任何模式下都不会超过;360Hz 屏、动效全开、静置实测,30 FPS 档整机占用约从 14% 降到 4%。搭配**「灵活模式」**:光标停在窗口上时跑满上限,移开自动回落**「保底帧率」**(15 / 24 / 30 / 60,不高于上限)——挂机时更省,鼠标回到窗口即是完整的交互帧率
 - **系统「减少动态效果」**开启时,所有动效自动停用
 - 选用以静态排版为主的主题(蓝色平台 / 期刊海报)也能明显降低合成负担
 - 数据侧不用担心:Liquipedia 官方 API 合规限速 + ETag 条件请求,手动刷新有 30 秒冷却,不会热轮询
@@ -143,7 +146,7 @@ RainyWatch 常驻桌面、窗口置顶,带有持续的环境动效,透明窗体�
 | 你配置了什么 | 直播中的比赛能看到 |
 | --- | --- |
 | 默认(Liquipedia,无需配置) | 赛程、赛果、图序条、VRS 排名、变阵 + 直播状态、阶段标签与已进行时长;**比分通常缺失**(Liquipedia 免费数据对进行中的比赛多无比分) |
-| + PandaScore token(免费可得) | 上述全部 + **系列大比分与当前图号/图名**,每 45 秒同步(仅覆盖 PandaScore 收录的正在进行的比赛) |
+| + PandaScore token(免费可得) | 上述全部 + **系列大比分与当前图号/图名**,每 45 秒同步(仅覆盖 PandaScore 收录的正在进行的比赛);**LP 主页未收录的近期赛果由 PandaScore 补齐**(补位行经队伍池与赛事池归一:规范队名/队标/VRS 徽章/队页链接自动补上;与 LP 同场配对过的赛事还会补齐 LP 赛事名与评级徽章;图序仍属 LP 元数据) |
 | + PandaScore 付费档 | 上述全部 + **回合级实时比分**(主卡中央大数字) |
 
 - 数据来自 Liquipedia 官方 API:自定义 User-Agent、请求间隔限速、ETag 条件请求,合规礼貌访问
@@ -280,6 +283,8 @@ The live match takes over the hero card, laid out like a broadcast HUD:
 - **Map veto strip**: for series whose BP was recorded by Liquipedia, the full map sequence is shown inline
 - **V# badges**: Valve world ranking (top 200) next to team names, higher-ranked side highlighted in green. The ranking is the **VRS (Valve Regional Standings)**: published by Valve roughly monthly (more frequently near Major qualifiers) and never including ongoing matches; the app follows Liquipedia's mirror — typically a few hours to a day behind the official release — re-checks every 6 h, and shows the stamp date in the footer
 - **Tournament tier badges** (S / A / B / C)
+- **Event tier filter** (Settings → Display): show C / B / A-tier-and-up or S-tier only, applied instantly; matches pinned to the hero card are exempt; display-only — cached data is never touched; events without tier info stay hidden unless "all tiers" is selected
+- **BO1 score style** (Settings → Display): "detailed first" shows map scores where available (e.g. 7-13; PandaScore-filled rows fall back to the series score); "series only" shows 1-0 across the table for a uniform look
 - **★ Follow teams & star players**: star any team from a match row or any player from a transfer row (or search them in settings); starred matches are **highlighted and pinned to the top** — hover the row and it unfolds one extra line revealing the follow note ("★ Team FaZe · ropz playing"); pre-match reminders (5/10/15/30 min) and final-score notifications; PandaScore vs Liquipedia naming differences (full name vs acronym) are matched automatically, so NAVI-style short names never miss a pin
 - Collapsible list sections for small windows
 
@@ -338,6 +343,7 @@ If your machine is tight on resources, dial it down:
 
 - **Performance-first toggle** (Settings → Theme): disables all ambient effects at once and pauses animations while the window is unfocused — idle cost drops to near zero
 - **Per-effect switches** (Settings → Theme): clash wave (WebGL), film strip animation, team auras (hover), tactical sweep… listed per theme and applied instantly; hover effects only trigger while your cursor is on the card, costing nothing at rest
+- **Visual FPS cap** (Settings → Theme): one ceiling for every animation in the window — waves, loops, hover glows, transitions (unlimited / 240 / 165 / 90 / 60 / 30); never exceeded in any state. Measured on a 360 Hz display with all effects on at idle: the 30 FPS step brings total CPU from ~14% down to ~4%. Pair it with **Flexible mode**: animations run at the cap while the cursor is on the window and drop to the **floor rate** (15 / 24 / 30 / 60, never above the cap) when you leave — cheaper while unattended, full interactive rate the moment the cursor returns
 - Windows' **"reduce motion"** accessibility setting disables all effects automatically
 - Choosing a mostly-static theme (Blue Platform / Journal Poster) also cuts compositing work
 - Data traffic is polite by design: the Liquipedia official API with rate limiting and ETag conditional requests, plus a 30 s cooldown on manual refresh — no hot polling
@@ -349,7 +355,7 @@ If your machine is tight on resources, dial it down:
 | What you configured | What a live match shows |
 | --- | --- |
 | Default (Liquipedia, no setup) | schedule, results, veto strips, VRS rankings, transfers + live status, phase chips and elapsed time; **the score is often missing** (Liquipedia's free data rarely carries live scores) |
-| + PandaScore token (free tier) | all of the above + **series score and current map number/name**, synced every 45 s (only for ongoing matches PandaScore covers) |
+| + PandaScore token (free tier) | all of the above + **series score and current map number/name**, synced every 45 s (only for ongoing matches PandaScore covers); recent results missing from the Liquipedia front page are filled in from PandaScore (filled rows are normalized through the team pool: canonical name, logo, VRS badge and VRS team page link are filled in automatically; tier badges and map vetoes remain LP-only metadata) |
 | + PandaScore paid tier | all of the above + **round-level score** (the big central digits) |
 
 - Liquipedia official API with polite access: custom User-Agent, rate limiting, ETag conditional requests
@@ -455,10 +461,6 @@ Site: [project homepage](https://likeravine233.github.io/RainyWatch/) · Feedbac
 ## 📄 许可 / License
 
 [AGPL-3.0](LICENSE) · 字体与第三方素材说明见 [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md) — fonts & third-party assets
-
-> **声明 / Notice**:角色立绘(shuiyue*.png)描绘《明日方舟》(Arknights)角色「水月」(Mizuki),该角色形象版权归鹰角网络(Hypergryph)所有;立绘为本项目作者自制,不适用 AGPL-3.0,作者保留所有权利,未经授权不得单独提取或商用。本项目为非官方个人作品,免费开源,与鹰角网络及任何相关实体无隶属关系。
->
-> **Notice**: The character artwork (shuiyue*.png) depicts Mizuki from *Arknights*, whose character likeness is owned by Hypergryph. The artwork itself was created by the project author, is not licensed under AGPL-3.0, and may not be extracted or commercially used without permission. This project is an unofficial personal work — free and open source, unaffiliated with and not endorsed by Hypergryph or any related entity.
 
 > 💬 本项目是作者的 vibe coding 之作——代码质量请勿过度计较;欢迎各路大牛批评指正、提 PR 一起优化,项目正在活跃维护中,反馈请开 [Issues](https://github.com/likeravine233/RainyWatch/issues)。
 >

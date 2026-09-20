@@ -618,6 +618,7 @@ body[data-theme] .brand-dot { border-radius: 4px; background: url('../assets/ico
 .hero-ev { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; min-width: 0; }
 .hero-ev .stage { color: var(--txt3); }
 .chip { flex: none; font-size: calc(10px * var(--fs)); padding: 1px 7px; border-radius: 20px; border: 1px solid var(--line); color: var(--txt2); }
+.m-ev .chip { padding: 0 6px; } /* 行内评级徽章紧凑变体:竖向内边距归零,不把三行右列的赛事行顶高 */
 .chip.live { color: #fff; background: rgba(255, 77, 79, 0.22); border-color: rgba(255, 77, 79, 0.5); }
 .chip.fmt { color: var(--accent); border-color: rgba(255, 138, 42, 0.4); }
 .live-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--live); animation: pulse 1.6s ease-in-out infinite; flex: none; }
@@ -684,8 +685,8 @@ body[data-wsize="xs"] .m-teams .m-vrank, body[data-wsize="s"] .m-teams .m-vrank 
 .map-strip.ms3 .ms-next { grid-column: 3; }
 /* 变体带(季后赛逐局,格数可到 5):保持 flex,两侧格等宽参与分配,对称局里当前图也居中 */
 .map-strip:not(.ms3) .ms-side { flex: 1 1 0; min-width: 0; }
-.map-strip .ms-side, .map-strip .ms-cur { display: inline-flex; flex-direction: column; align-items: center; gap: 1px; max-width: calc(64px * var(--fs)); flex: none; }
-.map-strip .ms-name { max-width: calc(58px * var(--fs)); overflow: hidden; white-space: nowrap; }
+.map-strip .ms-side, .map-strip .ms-cur { display: inline-flex; flex-direction: column; align-items: center; gap: 1px; max-width: calc(74px * var(--fs)); flex: none; }
+.map-strip .ms-name { max-width: calc(72px * var(--fs)); overflow: hidden; white-space: nowrap; } /* 72px:五全宽字形图名「炙热沙城Ⅱ」实测 71px 不截断(58px 曾切掉Ⅱ右半) */
 .map-strip .ms-side .ms-name { font-size: calc(11px * var(--fs)); opacity: 0.6; }
 .map-strip .ms-prev { -webkit-mask-image: linear-gradient(to left, #000 25%, transparent 95%); mask-image: linear-gradient(to left, #000 25%, transparent 95%); }
 .map-strip .ms-next { -webkit-mask-image: linear-gradient(to right, #000 25%, transparent 95%); mask-image: linear-gradient(to right, #000 25%, transparent 95%); }
@@ -840,19 +841,23 @@ body.mini .team { -webkit-app-region: no-drag; }
 /* ============ 列表 ============ */
 .tab-body { flex: 1; overflow: hidden; overflow-x: hidden; margin: 0 12px 6px; padding-top: 2px; display: flex; flex-direction: column; }
 .tab-body.hidden { display: none; }
-/* 功能分区:两个展开区平分高度(各自内滚),折叠区只占题头一行、剩余让给展开区。
+/* 功能分区:展开的分区平均分整个列表高度(各自内滚),折叠区只占题头一行、剩余让给展开区。
+   直播中(live-others)同属弹性组:比赛再多也只在分到的高度内滚动,不再以内容高把
+   即将开始/最近赛果挤出可视区(此前 basis=auto 一展开就顶走下面两区)。
    (赛果不再"前邻折叠时解除上限":那会让赛果以完整内容高参与弹性分配,把 flex 基准为 0 的
     即将开始饿死到 0 高——表现为折叠直播后打开赛果,即将开始连题头都被顶没) */
 .tab-body .list { flex: 1; min-height: 0; display: flex; flex-direction: column; overflow-y: auto; }
 .tab-body .list-section { flex: 0 1 auto; min-height: 0; display: flex; flex-direction: column; overflow: hidden; }
+.tab-body .list-section[data-sec="live-others"],
 .tab-body .list-section[data-sec="upcoming"],
 .tab-body .list-section[data-sec="ev-upcoming"],
 .tab-body .list-section[data-sec="ev-done"],
 .tab-body .list-section[data-sec="ev-ongoing"],
 .tab-body .list-section[data-sec="recent"] { flex: 1 1 0; }
 .tab-body .list-section.collapsed { flex: 0 0 auto; }
-/* 弹性分区(upcoming/ev-upcoming/ev-done/ev-ongoing/recent)收起:basis 保持 0px 不跳变,高度动画走 flex-grow + min-height(题头高度),展开/收起全平滑 */
-/* ev-ongoing 并入弹性组:它原是内容自适应(basis=auto),赛事一多(上限 10 条)就把 basis=0 缩不动的其他分区全挤到 0 高 */
+/* 弹性分区(live-others/upcoming/ev-upcoming/ev-done/ev-ongoing/recent)收起:basis 保持 0px 不跳变,高度动画走 flex-grow + min-height(题头高度),展开/收起全平滑 */
+/* ev-ongoing/live-others 并入弹性组的教训:内容自适应(basis=auto)分区内容一多,就把 basis=0 缩不动的其他分区全挤到 0 高 */
+.tab-body .list-section[data-sec="live-others"].collapsed,
 .tab-body .list-section[data-sec="upcoming"].collapsed,
 .tab-body .list-section[data-sec="ev-upcoming"].collapsed,
 .tab-body .list-section[data-sec="ev-done"].collapsed,
@@ -860,7 +865,7 @@ body.mini .team { -webkit-app-region: no-drag; }
 .tab-body .list-section[data-sec="recent"].collapsed { flex: 0 1 0px; min-height: 28px; }
 /* 收起瞬间消失的根因:这里曾把收起态 body 覆盖成 flex:0 1 0px —— 类一加上 body 高度先弹没,
    行整批消失后才轮到分区高度动画;body 保持 flex:1 跟随分区高度平滑过渡,由 overflow 裁出"从下往上收起" */
-/* 内容自适应分区(live-others):basis 保持 auto 不跳变,高度动画走 JS max-height */
+/* (live-others 曾是"内容自适应+basis=auto+JS max-height"分区,并入弹性组后 JS max-height 路径仅对未来非弹性 id 保留) */
 .tab-body .list-section.collapsed .sec-body { overflow: hidden; }
 /* 题头固定在滚动区外,行在 .sec-body 里滚;scroll-snap 在接近行边时轻吸,整行不切半也不劫持手感 */
 .tab-body .list-head { margin: 6px 2px 4px; padding-bottom: 3px; border-bottom: 1px solid var(--line); flex: none; }
@@ -939,20 +944,27 @@ body[data-lowpower="1"][data-unfocused="1"] * { animation-play-state: paused !im
 .m-teams .names span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: calc(12px * var(--fs)); }
 .m-teams .names span.win { color: var(--win); }
 .m-teams .names span.lose { color: var(--txt3); }
-.m-right { flex: 0 0 var(--mright-w); min-width: 0; text-align: right; overflow: hidden; } /* 定宽:开赛时间/赛事名/关注标注的右缘逐行对齐(原先随内容浮动,标注位置漂移) */
+.m-right { flex: 0 0 var(--mright-w); min-width: 0; text-align: right; display: flex; flex-direction: column; align-items: flex-end; justify-content: center; } /* 定宽右缘逐行对齐;纵向居中吸收 2/3 行(图序)差异;不裁切不省略:超宽文本向左滑入队标区,由 .over 的 mask 渐隐 */
 body { --mright-w: 172px; }
 body[data-wsize="m"] { --mright-w: 168px; }
 body[data-wsize="s"] { --mright-w: 152px; }
 body[data-wsize="xs"] { --mright-w: 136px; }
-.m-time { font: 600 calc(12px * var(--fs)) var(--f-mono); color: var(--accent); font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } /* 不许折行:图钉悬停让位时右列不再被顶成两行;定宽列内长倒计时出省略号 */
+.m-time { font: 600 calc(12px * var(--fs)) var(--f-mono); line-height: calc(13px * var(--fs)); color: var(--accent); font-variant-numeric: tabular-nums; white-space: nowrap; } /* 不许折行:图钉悬停让位时右列不再被顶成两行;超宽不走省略号,向左渐隐+悬停浮出。行高锁死:normal 会被 CJK 倒计时字形撑高 2px(与拉丁行不齐);紧凑值让三行右列压进两行行高 */
 .m-time.soon { color: var(--live); }
-.m-ev { font-size: calc(10px * var(--fs)); color: var(--txt3); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } /* 不设固定上限:窗口多宽就吃多宽,极窄时才省略 */
-.m-score { font: 700 calc(12px * var(--fs)) var(--f-mono); font-variant-numeric: tabular-nums; }
+.m-ev { font-size: calc(10px * var(--fs)); line-height: 1.2; color: var(--txt3); white-space: nowrap; } /* 同上:超宽向左渐隐,悬停浮出完整;行高 1.2 压紧三行结构 */
+@property --fade { syntax: '<length>'; inherits: false; initial-value: 26px; } /* 注册为可插值长度:悬停时渐隐幕平滑收回而非瞬切 */
+.m-right:hover { position: relative; z-index: 5; } /* 悬停右列:整列浮到队标区上层——pin 让位的 transform 会另建层,z 在此抬高保证浮出可见 */
+.m-right > * { width: max-content; position: relative; transition: --fade 0.18s ease; }
+.m-right > *.over { -webkit-mask-image: linear-gradient(to right, transparent, #000 var(--fade, 26px)); mask-image: linear-gradient(to right, transparent, #000 var(--fade, 26px)); } /* 渐隐幕:透明起自行首,不透明恰好落在定宽列缘,溢出段全部隐去;--fade 由 fitRows 按溢出量写入 */
+.m-right > *.over:hover { --fade: 0px !important; position: relative; z-index: 1; border-radius: 6px; } /* 悬停:渐隐幕平滑收回(!important 压过 fitRows 写的内联值) */
+.m-right > *.over::before { content: ''; position: absolute; inset: -5px -9px; z-index: -1; border-radius: 8px; background: var(--card); -webkit-backdrop-filter: blur(12px) saturate(1.15); backdrop-filter: blur(12px) saturate(1.15); opacity: 0; transition: opacity 0.18s ease; } /* 主题自适应毛玻璃衬底:只借 var(--card) 与模糊,不引入硬编码色 */
+.m-right > *.over:hover::before { opacity: 1; }
+.m-score { font: 700 calc(12px * var(--fs)) var(--f-mono); line-height: calc(13px * var(--fs)); font-variant-numeric: tabular-nums; } /* 行高与 .m-time 锁同一值 */
 .m-score .m-ago { font: 400 calc(10px * var(--fs)) var(--f-body); color: var(--txt3); margin-right: 5px; } /* 赛果的"N小时前":挂在比分左侧同行,比分仍靠边 */
 .m-score .sep { color: var(--txt3); }
 .m-score .s-win { color: var(--win); }
 /* 赛果行赛事列改弹性右对齐:阶段(淘汰赛/小组赛)与弃赛旗标不许被省略号吃掉——空间不足先省赛事名 */
-.m-evfin { display: flex; justify-content: flex-end; }
+.m-evfin { display: flex; justify-content: flex-end; align-items: center; } /* 居中不 stretch:评级徽章(自然高>行高)不被压扁裁边 */
 .m-evfin > :not(.m-evname) { flex: none; }
 .m-evfin .m-evname { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 .m-evstage { font-style: normal; } /* 阶段不斜体:借 i 标签只为弹性布局选择器,不是要斜体样式 */
@@ -1193,9 +1205,10 @@ select option { background-color: var(--card); color: var(--txt); }
 .sel-pop { position: absolute; left: 0; right: 0; top: 100%; z-index: 70; background: #151a26; border: 1px solid var(--line); border-radius: 8px; margin-top: 3px; padding: 4px; overflow: auto; max-height: 240px; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5); }
 .sel-pop.hidden { display: none; } /* hidden 无全局规则(此前 .badge/.overlay/.sugs 都是各自定义),漏了这条弹层就常驻成一条空长条,closePop 也"看不见" */
 /* 图序 chip:LP 赛事页弹层采到的 BP 结果(即将开始行);直播行当前图名补在 m-ev */
-.m-maps { display: flex; gap: 4px; margin-top: 3px; overflow: hidden; white-space: nowrap; }
-.m-maps i { flex: none; font-style: normal; font: 600 calc(10px * var(--fs))/1.5 var(--f-body); color: var(--txt2); background: var(--card); border: 1px solid var(--line); border-radius: 4px; padding: 0 5px; }
-.m-curmap { color: var(--accent); font-weight: 600; }
+.m-maps { display: flex; gap: 4px; margin-top: 1px; white-space: nowrap; }
+.m-maps i { flex: none; font-style: normal; font: 600 calc(9px * var(--fs))/1.2 var(--f-body); color: var(--txt2); background: var(--card); border: 1px solid var(--line); border-radius: 4px; padding: 0 4px; } /* 紧凑图牌:三行压进两行行高的关键一环(10px/1.5→9px/1.2) */
+.m-maps i.played { opacity: 0.45; } /* 直播行:已打完的图降暗 */
+.m-maps i.cur { color: var(--accent); border-color: var(--accent); } /* 直播行:当前图高亮 */
 .sel-opt { padding: 6px 9px; border-radius: 5px; font-size: calc(12px * var(--fs)); cursor: pointer; color: var(--txt2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .sel-opt:hover { background: rgba(255, 138, 42, 0.15); color: var(--txt); }
 .sel-opt.on { background: var(--card-hover); color: var(--txt); font-weight: 600; }
@@ -1251,9 +1264,10 @@ body.locked #app::after { content: "已锁定 · 托盘菜单解除"; position: 
 .mline .lose .mname, .mline span.lose { color: var(--txt3); }
 
 /* 设置面板:关注区 */
-.star-add { position: relative; }
+.star-add { position: relative; display: flex; gap: 6px; align-items: stretch; }
+.star-add > input#star-search { flex: 1; min-width: 0; width: auto; }
 #star-search {
-  width: 100%; background: var(--card); color: var(--txt);
+  background: var(--card); color: var(--txt);
   border: 1px solid var(--line); border-radius: 8px; padding: 7px 10px;
   font-size: calc(12px * var(--fs)); outline: none;
 }
@@ -1286,10 +1300,22 @@ body.locked #app::after { content: "已锁定 · 托盘菜单解除"; position: 
 .sug-team { margin-left: auto; flex: none; font-size: calc(10px * var(--fs)); color: var(--txt3); }
 .sug-err { padding: 7px 10px; font-size: calc(11px * var(--fs)); color: var(--live); cursor: default; }
 .sug-empty { padding: 7px 10px; font-size: calc(11px * var(--fs)); color: var(--txt3); cursor: default; }
+.sug-searching { display: flex; align-items: center; gap: 8px; padding: 7px 10px 3px; font-size: calc(11px * var(--fs)); color: var(--txt3); cursor: default; animation: ctx-pop .18s ease; } /* 搜索在途态:请求发出即亮,不再空白静等被当成空回 */
+.sug-note { padding: 0 10px 7px; font-size: calc(10px * var(--fs)); color: var(--txt3); cursor: default; } /* 在途态附注:结果会保留,可稍后查看 */
+.sug-hint { padding: 6px 10px; font-size: calc(11px * var(--fs)); color: var(--txt3); cursor: pointer; border-top: 1px solid color-mix(in srgb, var(--txt3) 25%, transparent); } /* 输入未触发搜索时的提示行(可点击=回车) */
+.sug-hint:hover { color: var(--txt); }
+.sug-cache { font-style: normal; flex: none; margin-left: 6px; font-size: calc(9px * var(--fs)); line-height: 1.6; padding: 0 5px; border-radius: 999px; border: 1px solid color-mix(in srgb, var(--txt3) 45%, transparent); color: var(--txt3); } /* 缓存行徽记:无实底,全主题安全 */
+.search-go { flex: none; width: 32px; align-self: stretch; border: 1px solid color-mix(in srgb, var(--txt3) 40%, transparent); border-radius: 8px; background: var(--card); color: var(--txt2); cursor: pointer; font-size: 13px; }
+.search-go:hover { color: var(--txt); border-color: var(--txt3); }
+.s-dots { display: inline-flex; gap: 3px; }
+.s-dots i { width: 3px; height: 3px; border-radius: 50%; background: var(--txt3); animation: dot-hop 1.2s infinite; }
+.s-dots i:nth-child(2) { animation-delay: .15s; }
+.s-dots i:nth-child(3) { animation-delay: .3s; }
 .star-list { margin-top: 6px; display: flex; flex-direction: column; gap: 3px; }
 .star-item { display: flex; align-items: center; gap: 8px; font-size: calc(12px * var(--fs)); padding: 5px 8px; border-radius: 8px; background: var(--card); }
 .star-item .s-glyph { color: var(--accent); flex: none; }
 .star-item .s-name { font-weight: 600; flex: none; }
+.star-item .s-statchip { font: 600 calc(10px * var(--fs))/1.4 var(--f-body); font-style: normal; margin-left: 5px; padding: 0 6px; border-radius: 999px; border: 1px solid color-mix(in srgb, var(--txt3) 55%, transparent); color: var(--txt3); white-space: nowrap; } /* 状态徽记:无实底,文字/描边同用主题弱化文字色(实底在深色 txt3 主题下会成黑条) */
 .star-item .s-team { color: var(--txt3); font-size: calc(10px * var(--fs)); flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .star-item .s-del { border: 0; background: transparent; color: var(--txt3); cursor: pointer; flex: none; padding: 2px 5px; border-radius: 5px; }
 .star-item .s-del:hover { color: var(--live); background: var(--card-hover); }
@@ -1558,6 +1584,8 @@ body[data-lowpower="1"] #hero { transform: none !important; transition: none !im
 .upd-girl.g2 { transition-delay: .14s; }
 #upd.hidden .upd-girl.g2 { transition-delay: 0s; }
 .upd-girl img { width: 100%; height: 100%; display: block; animation: peek-bob 3s ease-in-out 1s infinite; }
+/* 弹窗隐藏期必须停掉立绘浮动:visibility:hidden 不停 CSS 动画,无限 peek-bob 会迫使透明窗口持续走 60fps 合成管线 */
+#upd.hidden .upd-girl img { animation: none; }
 @keyframes peek-bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
 
 /* —— 透明(默认皮肤):深玻璃 + 暖橙,水月从右下角探头 —— */

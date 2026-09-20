@@ -1,7 +1,7 @@
 {
   "name": "rainywatch-lite",
   "productName": "RainyWatch",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "RainyWatch · 小暴雨助手 — CS2 桌面赛况小助手",
   "main": "main.js",
   "author": "likeravine233",

@@ -10,7 +10,6 @@ let ACRYLIC = false;
 let GLASS_CAP = false; // 取景玻璃(主进程允许采集,渲染层起 getDisplayMedia 视频流)
 let HERO_M = null;    // 当前主卡比赛(复制比分用)
 let MATCH_BY_KEY = {}; // matchKey -> 比赛对象(行右键菜单取数,renderMatches 重建)
-let searchTimer = null;
 let APP_VER = '';     // 应用版本(主进程 payload 带入,GitHub 反馈正文用)
 // GitHub 反馈仓库(RainyWatch):当前为私有仓库,公开后反馈按钮对所有人可用。
 // 右键"数据不准?"会以 ?title=&body= 预填 issue 模板,用户一打开就是待填的反馈框
@@ -21,6 +20,7 @@ const FEEDBACK_REPO = 'https://github.com/likeravine233/RainyWatch';
 // 当前版确认已最新时关于页优先展示在线版,可不发版修订文案
 const RELEASE_NOTES = {
   '0.0.1': { code: '红狐商会', quote: '“爱如此刻永恒”' },
+  '0.0.2': { code: '昨夜来电', quote: 'We go forth and multiply!' },
 };
 // 界面文案取词(lang 设置驱动),{n} 类占位替换
 const UIL = () => (SETTINGS && SETTINGS.uiLang) || 'zh'; // 界面语言(独立设置,界面只管界面;赛事文本用 LANG)
@@ -331,6 +331,8 @@ function vrsIndex() {
   return _vrsIdx;
 }
 function rankOf(team) {
+  if (!team) return null;
+  if (team.vrs) return team.vrs; // 队伍池已解析好的排名(Panda 补位行没有 href,靠 byName 猜常失配)
   const idx = vrsIndex();
   if (!idx || !team) return null;
   const slug = slugOf(team.href).toLowerCase();
@@ -364,6 +366,15 @@ function tierOf(href) {
 function tierChip(href) {
   const t = tierOf(href);
   return t ? `<span class="tier-chip ${esc(t)}" title="${esc(T('tier.title', { t: tierLabel(t) }))}">${esc(tierLabel(t))}</span>` : '';
+}
+// 赛事级别显示过滤(设置 minTier=all/C/B/A/S):纯渲染层 —— 只裁三区列表的显示,不触碰任何
+// 拉取/缓存/存档逻辑;无级别信息的赛事在非「所有赛事」档下隐藏(评级链 tierOf 见上)
+const TIER_RANK = { C: 1, B: 2, A: 3, S: 4 };
+function applyTierFilter(s) {
+  const min = SETTINGS && SETTINGS.minTier;
+  if (!min || min === 'all' || !TIER_RANK[min]) return s;
+  const pass = (m) => (TIER_RANK[tierOf(m.eventHref)] || 0) >= TIER_RANK[min];
+  return { live: s.live.filter(pass), upcoming: s.upcoming.filter(pass), recent: s.recent.filter(pass) };
 }
 // 赛果结束标记:仿系统推送的粗粒度时间段(刚刚/N分钟前/N小时前/昨天/N天前/日期),不带"约"、不精确到分
 function endAgoText(ms, approx) {
@@ -404,19 +415,24 @@ function sideStars(team) {
     }
   }
   for (const p of (SETTINGS?.starPlayers || [])) {
+    if (p.status === 'retired') continue; // 退役:不出现在任何标注;下放保留可见性,标注降级为"在替补席"
+    const bench = p.status === 'inactive', role = p.rosterRole || '';
     // PandaScore 的 teamSlug(如 natus-vincere-cs-go)与比赛侧 Liquipedia slug(Natus_Vincere)字面不等,
     // 剥掉 -cs-go 后缀再做队名归一;NAVI 这类"LP 显示缩写、Panda 存全名"的队靠它才置顶
     const ps = p.teamSlug ? normTeam(String(p.teamSlug).replace(/[-_ ]*cs[-_ ]*go$/i, '')) : '';
-    if (ps && slugN && ps === slugN) out.push({ type: 'player', name: p.name, id: p.id });
-    else if (p.panda && p.team && normTeam(p.team) === normTeam(team.name)) out.push({ type: 'player', name: p.name, id: p.id });
+    if (ps && slugN && ps === slugN) out.push({ type: 'player', name: p.name, id: p.id, bench, role });
+    else if (p.panda && p.team && normTeam(p.team) === normTeam(team.name)) out.push({ type: 'player', name: p.name, id: p.id, bench, role });
   }
   return out;
 }
 const starScore = (m) => (sideStars(m.teamA).length ? 1 : 0) + (sideStars(m.teamB).length ? 1 : 0);
 const starNames = (m) => [...sideStars(m.teamA), ...sideStars(m.teamB)].map(s => s.name);
-// 可见关注标注:选手写"xx 在阵",队伍写"队伍 xx",让 star 有明确含义(文案随界面语言)
+// 可见关注标注:选手写"xx 在阵"(下放=在替补席,教练=在教练席),队伍写"队伍 xx",让 star 有明确含义(文案随界面语言)
 const starTags = (m) => [...sideStars(m.teamA), ...sideStars(m.teamB)]
-  .map(s => T(s.type === 'player' ? 'star.tip.player' : 'star.tip.team', { n: s.name }));
+  .map(s => T(s.type === 'team' ? 'star.tip.team'
+    : (s.bench || s.role === 'sub') ? 'star.tip.bench'
+    : s.role === 'coach' ? 'star.tip.coach'
+    : 'star.tip.player', { n: s.name }));
 
 function sortedMatches() {
   const raw = DATA?.matches || {};
@@ -486,6 +502,12 @@ function pickHero(s) {
   }
   return s.live.find((m) => !m.pending) || s.live[0] || s.upcoming[0] || s.recent[0] || null; // 占位场(TBD)压到真实对局之后:它占的是直播位,但还没真的开打
 }
+// 主卡当前来源:置顶豁免级别过滤(用户明确指定要看这场),自动选择在过滤后的列表里挑。
+// renderHero 与 renderMatches 共用,保证"主卡显示谁"两处判定完全一致
+function heroSource() {
+  const all = sortedMatches();
+  return heroPin ? pickHero(all) : pickHero(applyTierFilter(all));
+}
 // 置顶切换后重渲染主卡与列表,并给主卡挂一次进场动效(class 只在点击时挂,强制重排重启,播完即摘)
 function swapHero() {
   renderHero(); renderMatches();
@@ -499,8 +521,7 @@ function swapHero() {
 
 function renderHero() {
   const hero = $('#hero');
-  const { live, upcoming, recent } = sortedMatches();
-  const src = pickHero({ live, upcoming, recent }); // 置顶优先,失效回自动(直播>即将开始>赛果)
+  const src = heroSource(); // 置顶优先,失效回自动(直播>即将开始>赛果);级别过滤豁免置顶
   const m = src;
   const isPinned = !!(src && heroPin && matchKey(src) === heroPin);
   const PIN_CHIP = `<span class="chip pin-chip" data-unpin title="${esc(T('pin.unpin'))}">📌</span>`;
@@ -530,11 +551,11 @@ function renderHero() {
       const siN = ((/bo\s*(\d)/i.exec(m.format || '') || [])[1] | 0);
       const sum = m.score ? m.score[0] + m.score[1] : 0;
       const onFinal = siN >= 3 && sum === siN - 1; // 决胜图进行中
-      const mapNo = (ri && ri.mapNum) || sum + 1;
       const e = mapEntryFor(m);
       const games = ((e && e.games) || []).map((g) => g.map).filter(Boolean);
       const hit = games.indexOf(curMap);
       const idx = hit >= 0 ? hit : (riRounds && ri.mapNum ? ri.mapNum - 1 : sum); // Panda 图名与 LP 短名对不上时:回合数据按图号,否则按已胜图数
+      const mapNo = hit >= 0 ? hit + 1 : ((ri && ri.mapNum) || sum + 1); // LP 图序能对上号时编号以 LP 为准(Panda position 曾与 LP 错位成"图2标第1图")
       const prev = idx > 0 ? (games[idx - 1] || '') : '';
       let next = idx >= 0 && idx < games.length - 1 ? (games[idx + 1] || '') : '';
       let nextNo = idx + 2, nextFin = siN >= 3 && nextNo === siN;
@@ -638,9 +659,10 @@ function renderHero() {
       ${stars.length ? `<div class="hero-sub"><span class="star-mark">★ ${esc(stars.join(' · '))}</span></div>` : ''}`;
   } else if (m && m.status === 'finished') {
     HERO_M = m;
-    // 弃赛:无比分,比分位与背景大字显示 FF/W(W=walkover 胜方)
-    const slotA = m.forfeit ? (m.teamA.isWinner ? 'W' : 'FF') : (m.score ? m.score[0] : 0);
-    const slotB = m.forfeit ? (m.teamB.isWinner ? 'W' : 'FF') : (m.score ? m.score[1] : 0);
+    // 弃赛:无比分,比分位与背景大字显示 FF/W(W=walkover 胜方);比分与列表同规(seriesScore:BO1 小分归一系列分)
+    const [fa, fb] = seriesScore(m);
+    const slotA = m.forfeit ? (m.teamA.isWinner ? 'W' : 'FF') : fa;
+    const slotB = m.forfeit ? (m.teamB.isWinner ? 'W' : 'FF') : fb;
     const [vA, vB] = rankBadges(m);
     hero.style.setProperty('--tc-a', tColor(m.teamA));
     hero.style.setProperty('--tc-b', tColor(m.teamB));
@@ -651,7 +673,7 @@ function renderHero() {
       <div class="hero-main">
         <div class="hero-bg-score"><span class="hbg hbg-a">${slotA}</span><span class="hbg hbg-b">${slotB}</span></div>
         <div class="team team-a-block ${m.teamA.isWinner ? 'winner' : 'loser'}" title="${esc(m.teamA.name)}">${logoHtml(m.teamA.logo, m.teamA.name)}${vA}<span class="tname"><span class="tname-txt">${esc(heroName(m.teamA))}</span></span></div>
-        <div class="score" title="${T('copy.tip.score')}"><div class="num"><span class="s-a">${m.forfeit ? slotA : (m.score ? m.score[0] : '')}</span><span class="sep">-</span><span class="s-b">${m.forfeit ? slotB : (m.score ? m.score[1] : '')}</span></div></div>
+        <div class="score" title="${T('copy.tip.score')}"><div class="num"><span class="s-a">${m.forfeit ? slotA : fa}</span><span class="sep">-</span><span class="s-b">${m.forfeit ? slotB : fb}</span></div></div>
         <div class="team team-b-block ${m.teamB.isWinner ? 'winner' : 'loser'}" title="${esc(m.teamB.name)}">${logoHtml(m.teamB.logo, m.teamB.name)}${vB}<span class="tname"><span class="tname-txt">${esc(heroName(m.teamB))}</span></span></div>
       </div>
       <div class="hero-sub"><span>${fmtStartTime(m.ts)}${T('hero.starts')}${m.forfeit ? ` · ${esc(T('match.forfeit'))}` : ''}</span><span>· ${endAgoHtml(m)}</span></div>`;
@@ -661,6 +683,7 @@ function renderHero() {
   }
   setHtml(hero, HH);
   if (window.FXW) window.FXW.sync(); // 对撞波:versus 主题主卡氛围层,随主卡重绘挂载/摘除
+  window.VC?.sync?.(); // 视觉时钟:visualFps 换挡,顺带收编重绘后新出现的循环动画
 }
 
 function matchCopyText(m) { // 对阵/比分文案(主卡点击与右键菜单共用)
@@ -696,6 +719,7 @@ function fbEnv() { // 反馈环境串:白名单收集(版本/主题/窗口/字�
     `界面${UIL()}`,
   ];
   if (SETTINGS && SETTINGS.mapStripMode) parts.push(SETTINGS.mapStripMode === 'band' ? '图序带' : '仅当前图');
+  if (SETTINGS && SETTINGS.minTier && SETTINGS.minTier !== 'all') parts.push(`≥${SETTINGS.minTier}级`);
   if (nt) parts.push(`WinNT${nt}`);
   return parts.join(' · ');
 }
@@ -794,7 +818,7 @@ function section(id, title, rowsHtml, totop) {
   const folded = !!SETTINGS?.collapsedSections?.[id];
   // 非弹性分区的收起靠点击处理器写入的内联 max-height:0;重建若只回挂类不回挂样式,
   // 会"外观展开却带着 collapsed 类"——第一次点击被脏类吃掉,第二次才能折(进行中分区 bug)
-  const bodyStyle = folded && !['upcoming', 'ev-upcoming', 'recent', 'ev-done', 'ev-ongoing'].includes(id) ? ' style="max-height:0px"' : '';
+  const bodyStyle = folded && !['live-others', 'upcoming', 'ev-upcoming', 'recent', 'ev-done', 'ev-ongoing'].includes(id) ? ' style="max-height:0px"' : '';
   return `<section class="list-section${folded ? ' collapsed' : ''}" data-sec="${id}"><div class="list-head" data-toggle="${id}"><span class="caret"></span>${title}</div><div class="sec-body"${bodyStyle}>${rowsHtml}</div>${totop ? '<button class="to-top" data-i18n-title="totop.tip" title="回到顶部">↑</button>' : ''}</section>`;
 }
 // 数据推送会整树重建 innerHTML,分区滚动位置随之归零("划着划着突然回到最顶层"的根源);
@@ -822,8 +846,8 @@ function renderWithScrollKeep(el, html) {
 }
 function renderMatches() {
   const el = $('#up-list');
-  const { upcoming, recent, live } = sortedMatches();
-  const picked = pickHero({ live, upcoming, recent }); // 主卡当前这场(置顶优先)
+  const { live, upcoming, recent } = applyTierFilter(sortedMatches()); // 级别过滤只作用列表显示
+  const picked = heroSource(); // 与主卡同一来源:置顶场即使低于过滤档位也只占主卡,不在列表重复出现
   MATCH_BY_KEY = {}; // 行右键菜单取数索引:key -> 比赛对象
   if (picked) MATCH_BY_KEY[matchKey(picked)] = picked;
   let html = '';
@@ -846,6 +870,8 @@ function renderMatches() {
     html += section('recent', T('sec.recent'), reRows, true);
   }
   renderWithScrollKeep(el, html);
+  fitRows(el);
+  if (!el._fitRO) { el._fitRO = new ResizeObserver(() => fitRows(el)); el._fitRO.observe(el); } // 窗宽/字号/主题改动都折算成容器尺寸变化,自动重算渐隐
   // 绑定折叠(经主进程持久化)
   $$('#up-list .list-head[data-toggle]').forEach(h => {
     h.style.cursor = 'pointer';
@@ -856,7 +882,7 @@ function renderMatches() {
       cur[id] = !sec.classList.contains('collapsed') ? true : false;
       if (!cur[id]) delete cur[id];
       if (SETTINGS) SETTINGS.collapsedSections = cur; // 本地同步:折叠不再回推设置,数据刷新整树重建时不会弹回
-      const flexible = ['upcoming', 'ev-upcoming', 'recent', 'ev-done', 'ev-ongoing'].includes(id); // 弹性分区走纯 CSS 过渡;内容自适应分区 basis 恒为 auto,高度动画走 max-height
+      const flexible = ['live-others', 'upcoming', 'ev-upcoming', 'recent', 'ev-done', 'ev-ongoing'].includes(id); // 弹性分区走纯 CSS 过渡(live-others 已并入);非弹性 id 的 basis 恒为 auto,高度动画走 max-height
       const body = sec.querySelector('.sec-body');
       if (!flexible && body) {
         if (cur[id]) {
@@ -882,13 +908,29 @@ const starCount = (arr) => arr.filter(m => starScore(m) > 0).length;
 
 // 图序:LP 赛事页弹层采到的 BP 结果(push:data.maps,key=开赛时间戳;弹层里是队伍短名,宽松匹配)
 function mapEntryFor(m) {
-  const arr = MAPPOOL[String(m.ts)] || [];
-  if (!arr.length) return null;
   const key = (s) => String(s || '').toLowerCase().replace(/[^a-z0-9\u4e00-\u9fff]/g, '');
   const eq = (x, y) => { x = key(x); y = key(y); return !!x && !!y && (x === y || (x.length >= 4 && y.length >= 4 && (x.includes(y) || y.includes(x)))); };
-  return arr.find((x) => eq(x.a, m.teamA?.name) && eq(x.b, m.teamB?.name))
+  // allowSingle:同一时间戳桶里唯一场次是否免队伍核对直接认领——只在精确键路径开启;
+  // ±6h 改期兜底必须关掉,否则 TBA 场次(如并行赛程的图序未宣布)会认领时间窗内唯一有图序的其他比赛
+  const pairHit = (arr, allowSingle) => arr.find((x) => eq(x.a, m.teamA?.name) && eq(x.b, m.teamB?.name))
     || arr.find((x) => eq(x.a, m.teamB?.name) && eq(x.b, m.teamA?.name))
-    || (arr.length === 1 ? arr[0] : null); // 同一时间戳唯一场次直接认(并行场次靠宽松名兜底)
+    || (allowSingle && arr.length === 1 ? arr[0] : null); // 同一时间戳唯一场次直接认(并行场次靠宽松名兜底)
+  const exact = MAPPOOL[String(m.ts)];
+  if (exact && exact.length) {
+    const hit = pairHit(exact, true);
+    if (hit) return hit;
+  }
+  // 改期/时间校准兜底:精确键失配(LP 弹层与列表的开赛时间偶有出入,曾致"重开后图序消失")
+  // 时在 ±6h 内按队伍配对搜回。时间从宽、队伍从严(双向都要对上,不用单场兜底),避免并行场次错认。
+  if (!m.ts) return null;
+  const tLo = m.ts - 6 * 3600e3, tHi = m.ts + 6 * 3600e3;
+  for (const k of Object.keys(MAPPOOL)) {
+    const kt = Number(k);
+    if (!(kt >= tLo && kt <= tHi) || k === String(m.ts)) continue;
+    const hit = pairHit(MAPPOOL[k], false);
+    if (hit && hit.games && hit.games.some((g) => g.map)) return hit;
+  }
+  return null;
 }
 function mapsChipsHtml(m) { // 即将开始行:整条 BP 图序
   const e = mapEntryFor(m);
@@ -906,30 +948,56 @@ function heroMapName(m) { // 无 Panda 增强时:LP 图序按已胜图数定位�
   if (!e || !(e.games || []).length) return '';
   return (e.games[m.score ? m.score[0] + m.score[1] : 0] || {}).map || '';
 }
-function curMapChip(m) { // 直播行(Panda 无回合数据时):按大小分定位当前图
-  const n = heroMapName(m);
-  return n ? ` · <b class="m-curmap">${esc(mapZh(n))}</b>` : '';
+function liveMapsHtml(m) { // 直播行:整条 BP 图序(当前图 accent 高亮、已打图降暗);无 LP 图序返回空,右列保持两行
+  const e = mapEntryFor(m);
+  if (!e || !(e.games || []).some((g) => g.map)) return '';
+  const playedN = m.score ? m.score[0] + m.score[1] : 0; // 当前图 = 已胜图数那一门(与主卡 heroMapName 同源)
+  return `<div class="m-maps">${e.games.map((g, gi) => {
+    if (!g.map) return '';
+    const st = gi === playedN ? ' cur' : gi < playedN ? ' played' : '';
+    return `<i class="${st.trim()}">${esc(mapZh(g.map))}</i>`;
+  }).join('')}</div>`;
 }
+// 右列不裁不省:行宽超出定宽列时打 .over,由 CSS mask 量向左渐隐(--fade = 溢出长度,悬停浮出完整)
+function fitRows(scope) {
+  const cols = scope && scope.classList && scope.classList.contains('m-right') ? [scope] : (scope || document).querySelectorAll('.m-right');
+  for (const col of cols) {
+    const cw = col.clientWidth;
+    if (!cw) continue; // 折叠分区:宽 0 时跳过,展开后由 resize/重渲兜底
+    for (const el of col.children) {
+      const over = el.scrollWidth - cw;
+      el.classList.toggle('over', over > 1);
+      if (over > 1) el.style.setProperty('--fade', Math.min(over, el.scrollWidth) + 'px');
+    }
+  }
+}
+// BO1 比分显示(设置 bo1Score):LP 赛果模板对 BO1 直接印地图小分(7-13,更详细),PandaScore results
+// 恒为系列分(1-0;免费档逐图 results 实测恒 null,补位行拿不到小分)——同一赛事两类源混排会打架。
+// raw=小分优先(默认):有更详细的数据就显示更详细的,补位行回落系列分;
+// series=统一大比分:BO1 全表按系列比分显示。score 原值不动(复制比分不受影响),直播行不动
+function seriesScore(m) {
+  let a = m.score ? m.score[0] : 0, b = m.score ? m.score[1] : 0;
+  if ((SETTINGS && SETTINGS.bo1Score) === 'series') {
+    const boN = ((/bo\s*(\d)/i.exec(m.format || '') || [])[1] | 0);
+    if (m.status === 'finished' && boN === 1 && a + b > 2) {
+      const aw = a > b; a = aw ? 1 : 0; b = aw ? 0 : 1;
+    }
+  }
+  return [a, b];
+}
+
 function matchRow(m) {
   const starred = starScore(m) > 0;
   const isLive = m.status === 'live';
-  const ri = isLive ? roundInfo(m) : null;
-  const sa = m.score ? m.score[0] : 0, sb = m.score ? m.score[1] : 0;
-  // 直播行:有回合级数据→当前图比分为主、大比分为辅;无回合级数据(PandaScore 未收录/队名对不上)→
-  // 大比分或"进行中",绝不显示开赛时刻——否则看起来像没同步的旧数据
-  const right = ri
-    ? (ri.ra != null
-      ? `<div class="m-right"><div class="m-score"><span class="m-live-score">${ri.ra}:${ri.rb}</span></div><div class="m-ev">${T('copy.series', { a: sa, b: sb })} · ${T('copy.round', { n: ri.round })} · ${tierChip(m.eventHref)}${esc(evName(m.event))}</div></div>`
-      : `<div class="m-right"><div class="m-score"><span class="m-live-score">${T('hero.map', { n: ri.mapNum })}</span></div><div class="m-ev">${tierChip(m.eventHref)}${esc(evName(m.event))}</div></div>`)
-    : (isLive
-      ? (m.pending
-        ? `<div class="m-right"><div class="m-score"><span class="m-live-score">${T('hero.waiting')}</span></div><div class="m-ev">${tierChip(m.eventHref)}${esc(evName(m.event))}</div></div>`
-        : m.score
-        ? `<div class="m-right"><div class="m-score"><span class="m-live-score">${sa} - ${sb}</span></div><div class="m-ev">${tierChip(m.eventHref)}${esc(evName(m.event))}${curMapChip(m)}</div></div>`
-        : `<div class="m-right"><div class="m-score"><span class="m-live-score">${T('hero.inprogress')}</span></div><div class="m-ev">${tierChip(m.eventHref)}${esc(evName(m.event))}${curMapChip(m)}</div></div>`)
-      : ((m.forfeit || m.score) && m.status !== 'upcoming' // 弃赛(FF:W)无比分也算赛果;时间戳照旧,「弃赛」旗标写在赛事行首,阶段不被省略号吃掉
+  const [sa, sb] = seriesScore(m);
+  // 直播行右列三行:大比分(小比分/回合数只属于主卡,列表不重复)/ 赛事名·阶段 / BP 图序(当前图高亮)。
+  // 绝不显示开赛时刻——否则看起来像没同步的旧数据。
+  // 三行以紧凑行高压进与两行行相同的行高里(不改变行尺寸,图序带只是嵌进队名列让出的纵向空间)
+  const right = isLive
+    ? `<div class="m-right"><div class="m-score"><span class="m-live-score">${m.pending ? T('hero.waiting') : `${sa} - ${sb}`}</span></div><div class="m-ev">${tierChip(m.eventHref)}${esc(evName(m.event))}${m.stage ? `<i class="m-evstage"> · ${esc(tr(m.stage))}</i>` : ''}</div>${liveMapsHtml(m)}</div>`
+    : ((m.forfeit || m.score) && m.status !== 'upcoming' // 弃赛(FF:W)无比分也算赛果;时间戳照旧,「弃赛」旗标写在赛事行首,阶段不被省略号吃掉
         ? `<div class="m-right"><div class="m-score"><span class="m-ago">${endAgoHtml(m)}</span></div><div class="m-ev m-evfin" title="${esc(evName(m.event))}${m.stage ? ' · ' + esc(tr(m.stage)) : ''} · ${esc(endAgoText(Date.now() - (m.endedAt || m.ts), !m.endedAt || !!m.endedApprox))}">${tierChip(m.eventHref)}<span class="m-evname">${esc(evName(m.event))}</span>${m.stage ? `<i class="m-evstage"> · ${esc(tr(m.stage))}</i>` : ''}</div></div>`
-        : `<div class="m-right"><div class="m-time ${upcomingStarted(m.ts) ? 'started' : upcomingSoon(m.ts) ? 'soon' : ''}" data-mtime data-ts="${m.ts}">${upcomingStarted(m.ts) ? `${T('hero.soon')}${CD_DOTS}` : esc(upcomingTimeText(m.ts))}</div><div class="m-ev">${m.tsPrev ? `<i class="m-shift">${esc(fmtShift(m.ts - m.tsPrev))}</i>` : ''}${tierChip(m.eventHref)}${esc(evName(m.event))}${m.format ? ' · ' + esc(m.format) : ''}</div>${mapsChipsHtml(m)}</div>`));
+        : `<div class="m-right"><div class="m-time ${upcomingStarted(m.ts) ? 'started' : upcomingSoon(m.ts) ? 'soon' : ''}" data-mtime data-ts="${m.ts}">${upcomingStarted(m.ts) ? `${T('hero.soon')}${CD_DOTS}` : esc(upcomingTimeText(m.ts))}</div><div class="m-ev">${m.tsPrev ? `<i class="m-shift">${esc(fmtShift(m.ts - m.tsPrev))}</i>` : ''}${tierChip(m.eventHref)}${esc(evName(m.event))}${m.format ? ' · ' + esc(m.format) : ''}</div>${mapsChipsHtml(m)}</div>`);
   const url = m.hltv || m.eventHref || m.teamA.href;
   // 星标对阵:本体只保留队伍标记(左渐变+边条);悬停时行向下舒展一行,露出"xx 在阵/队伍 xx"关注内容
   const starLine = starred ? `<div class="m-star-line"><span>★ ${starTags(m).map((s) => esc(s)).join(' · ')}</span></div>` : '';
@@ -1081,7 +1149,7 @@ function renderEvents() {
       cur[id] = !sec.classList.contains('collapsed') ? true : false;
       if (!cur[id]) delete cur[id];
       if (SETTINGS) SETTINGS.collapsedSections = cur; // 本地同步:折叠不再回推设置,数据刷新整树重建时不会弹回
-      const flexible = ['upcoming', 'ev-upcoming', 'recent', 'ev-done', 'ev-ongoing'].includes(id); // 弹性分区走纯 CSS 过渡;内容自适应分区 basis 恒为 auto,高度动画走 max-height
+      const flexible = ['live-others', 'upcoming', 'ev-upcoming', 'recent', 'ev-done', 'ev-ongoing'].includes(id); // 弹性分区走纯 CSS 过渡(live-others 已并入);非弹性 id 的 basis 恒为 auto,高度动画走 max-height
       const body = sec.querySelector('.sec-body');
       if (!flexible && body) {
         if (cur[id]) {
@@ -1154,11 +1222,15 @@ function renderStars() {
   if (!pl || !tl) return;
   const players = SETTINGS?.starPlayers || [];
   const teams = SETTINGS?.starTeams || [];
-  pl.innerHTML = players.map(p => `<div class="star-item">
-    <span class="s-glyph">★</span><span class="s-name">${esc(p.name)}</span>
+  pl.innerHTML = players.map(p => {
+    // 下放/退役徽记:让"在阵消失"有迹可循,不被当成关注丢了
+    const st = p.status === 'inactive' ? T('star.status.inactive') : p.status === 'retired' ? T('star.status.retired') : '';
+    return `<div class="star-item">
+    <span class="s-glyph">★</span><span class="s-name">${esc(p.name)}${st ? `<i class="s-statchip">${esc(st)}</i>` : ''}</span>
     <span class="s-team">${p.resolving && !p.team ? T('player.resolving') : (p.team ? esc(p.team) : (p.err ? T('player.err') : T('player.unk')))}</span>
     <button class="s-del" data-del-player="${esc(p.id)}" title="${T('del.tip')}">✕</button>
-  </div>`).join('');
+  </div>`;
+  }).join('');
   tl.innerHTML = teams.map(t => `<div class="star-item">
     <span class="s-glyph">☆</span><span class="s-name">${esc(t.name)}</span>
     <span class="s-team">${T('star.team.tag')}</span>
@@ -1166,14 +1238,44 @@ function renderStars() {
   </div>`).join('');
 }
 
-async function doSearch(q) {
+let sugSeq = 0;
+const SUG_FRESH = 24 * 3600e3; // 缓存新鲜期:期内重复搜索零网络,过期条目即时显示+后台静默刷新
+// 本地缓存即时建议:输入即出(零网络),缓存行带"已缓存"徽记;底部常驻"按回车搜索"提示(可点击)
+// 搜索改为显式触发(回车/按钮),不再逐键自动查——LP opensearch 走 2s 礼貌队列,逐键触发既慢又挤队列
+function cacheSugRows(q) {
+  const ql = String(q || '').toLowerCase();
+  if (!ql) return [];
+  return Object.values(SETTINGS?.playerCache || {})
+    .filter(r => String(r.title || '').toLowerCase().includes(ql))
+    .sort((a, b) => (b.cachedAt || 0) - (a.cachedAt || 0)).slice(0, 6);
+}
+function sugRowHtml(r, cached) {
+  return `<div class="sug" data-sug-name="${esc(r.title)}" data-sug-href="${esc(r.href || '')}"${r.slug ? ` data-sug-slug="${esc(r.slug)}" data-sug-team="${esc(r.team || '')}" data-sug-team-slug="${esc(r.teamSlug || '')}"` : ''}>${esc(r.title)}${r.team ? `<span class="sug-team">${esc(r.team)}</span>` : ''}${cached ? `<i class="sug-cache">${esc(T('sug.cache'))}</i>` : ''}</div>`;
+}
+function renderLocalSugs(q) {
   const box = $('#star-sugs');
-  if (!q || q.length < 2) { box.classList.add('hidden'); return; }
-  const res = await window.csapi.searchPlayers(q);
-  if (!$('#star-search').matches(':focus')) { // 请求回来时已失焦:防抖迟到结果不再弹出挡住下方内容
-    box.classList.add('hidden');
-    return;
+  if (!q) { box.classList.add('hidden'); return; }
+  const rows = cacheSugRows(q);
+  box.innerHTML = rows.map(r => sugRowHtml(r, true)).join('') + `<div class="sug-hint" id="sug-hint">${esc(T('sug.hint'))}</div>`;
+  box.classList.remove('hidden');
+}
+async function triggerSearch(qIn) {
+  const box = $('#star-sugs');
+  const q = String(qIn || '').trim();
+  if (!q) return;
+  const seq = ++sugSeq;
+  const hit = (SETTINGS?.playerCache || {})[q.toLowerCase()];
+  if (hit) { // 缓存命中:即时出结果零等待;过期条目再后台静默刷新(结果到了原位替换)
+    box.innerHTML = sugRowHtml(hit, true);
+    box.classList.remove('hidden');
+    if (Date.now() - (hit.cachedAt || 0) < SUG_FRESH) return;
+  } else { // 未缓存:亮"搜索中"态,并注明结果会保留、可稍后查看
+    box.innerHTML = `<div class="sug-searching">${esc(T('sug.searching'))}<span class="s-dots"><i></i><i></i><i></i></span></div><div class="sug-note">${esc(T('sug.keep'))}</div>`;
+    box.classList.remove('hidden');
   }
+  const res = await window.csapi.searchPlayers(q);
+  if (seq !== sugSeq) return; // 已有更新一次的搜索:迟到结果整包丢弃
+  if (!$('#star-search').matches(':focus')) { box.classList.add('hidden'); return; } // 已失焦:不再弹出挡住下方内容
   if (res?.err) { // 限流/网络错误显式反馈,不再静默变"没反应"
     box.innerHTML = `<div class="sug-err">${esc(res.err)}</div>`;
     box.classList.remove('hidden');
@@ -1181,8 +1283,7 @@ async function doSearch(q) {
   }
   const items = res?.items || [];
   if (!items.length) { box.innerHTML = `<div class="sug-empty">${esc(T('sug.none'))}</div>`; box.classList.remove('hidden'); return; }
-  // PandaScore 结果带 slug+当前队伍,点击即可入库免二次解析;Liquipedia 回退结果只有 href
-  box.innerHTML = items.map(r => `<div class="sug" data-sug-name="${esc(r.title)}" data-sug-href="${esc(r.href || '')}"${r.slug ? ` data-sug-slug="${esc(r.slug)}" data-sug-team="${esc(r.team || '')}" data-sug-team-slug="${esc(r.teamSlug || '')}"` : ''}>${esc(r.title)}${r.team ? `<span class="sug-team">${esc(r.team)}</span>` : ''}</div>`).join('');
+  box.innerHTML = items.map(r => sugRowHtml(r, false)).join('');
   box.classList.remove('hidden');
 }
 
@@ -1268,6 +1369,7 @@ setInterval(() => {
     }
     el.classList.toggle('soon', upcomingSoon(ts));
     el.classList.toggle('started', upcomingStarted(ts));
+    fitRows(el.closest('.m-right') || undefined); // 倒计时↔时刻切换会改变行宽占用,即时重算渐隐
   });
   $$('[data-endts]').forEach(el => {
     el.textContent = endAgoText(Date.now() - +el.dataset.endts, !!el.dataset.approx);
@@ -1413,6 +1515,7 @@ function applySettingsNow(s, rerender = true) {
   document.body.dataset.lowpower = s.lowPower ? '1' : '0';
   document.body.dataset.fx = fxEnabledIds().join(' '); // 主题动效注册表:当前主题且未被单独关闭的动效 id
   if (window.FXW) window.FXW.sync(); // 主题/动效开关/低功耗变化:对撞波同步挂载或摘除
+  window.VC?.sync?.(); // 视觉时钟:主题/低功耗/visualFps 变化统一走这里换挡或归还
   fxBuildList();
   document.documentElement.style.setProperty('--op', String(s.opacity ?? 1));
   applyLowop(s.opacity);
@@ -1435,6 +1538,10 @@ function applySettingsNow(s, rerender = true) {
   if (ssSel) ssSel.value = s.storyStyle || 'pro';
   const msSel = $('#map-strip-sel');
   if (msSel) msSel.value = s.mapStripMode || 'band';
+  const mtSel = $('#min-tier-sel');
+  if (mtSel) mtSel.value = s.minTier || 'all';
+  const bsSel = $('#bo1-score-sel');
+  if (bsSel) bsSel.value = s.bo1Score || 'raw';
   const fsSel = $('#fs-sel');
   if (fsSel) fsSel.value = String(s.fontScale || 3);
   const ut = $('#upcoming-time-sel');
@@ -1467,6 +1574,12 @@ function applySettingsNow(s, rerender = true) {
   $('#tg-prematch-starred').checked = s.preMatchStarredOnly !== false;
   $('#tg-results').checked = s.notifyResults !== false;
   $('#tg-lowpower').checked = !!s.lowPower;
+  const vf = $('#vfps-sel');
+  if (vf) vf.value = String(+(s.visualFps ?? 0) || 0);
+  const flexTg = $('#tg-flex');
+  if (flexTg) flexTg.checked = !!s.flexMode;
+  const idleSel = $('#idlefps-sel');
+  if (idleSel) idleSel.value = String(Math.max(15, +(s.idleFps ?? 30) || 30));
   $('#prematch-min').value = String(s.preMatchMin ?? 10);
   const df = $('#date-fmt-sel');
   if (df) df.value = s.dateFormat || 'smart';
@@ -1608,7 +1721,11 @@ function bindEvents() {
     if (btn) btn.classList.toggle('show', b.scrollTop > 48);
   }, { capture: true, passive: true });
   // 失焦态:系统背板 acrylic 失焦会去饱和,渲染层加深打底保对比(主进程 push:focus)
-  window.csapi.onFocus?.((f) => { document.body.dataset.unfocused = f ? '0' : '1'; });
+  window.csapi.onFocus?.((f) => {
+    document.body.dataset.unfocused = f ? '0' : '1';
+    window.FXW?.syncLoop?.(); // 对撞波随焦点启停:判定源是上面的 dataset,这里负责失焦恢复时拉起
+    window.VC?.sync?.(); // 视觉时钟:失焦冻结停推进,回焦拉起(接管中的动画保持 pause 不归还)
+  });
 
   $('#btn-settings').onclick = () => {
     const s = $('#settings');
@@ -1638,7 +1755,7 @@ function bindEvents() {
 
   // 全局点击:优先处理星标按钮,再处理链接跳转
   document.addEventListener('click', (e) => {
-    if (!e.target.closest('#star-sugs, #star-search')) $('#star-sugs')?.classList.add('hidden'); // 点击别处立即收起建议,不依赖失焦时机
+    if (!e.target.closest('#star-sugs, #star-search, #star-search-go')) $('#star-sugs')?.classList.add('hidden'); // 点击别处立即收起建议,不依赖失焦时机(含搜索按钮,防误收起)
     const starTeam = e.target.closest('[data-star-team]');
     if (starTeam) {
       e.stopPropagation();
@@ -1660,6 +1777,8 @@ function bindEvents() {
     if (delP) { window.csapi.starRemovePlayer(delP.dataset.delPlayer); return; }
     const delT = e.target.closest('[data-del-team]');
     if (delT) { window.csapi.starRemoveTeam(delT.dataset.delTeam); return; }
+    const hint = e.target.closest('#sug-hint');
+    if (hint) { triggerSearch($('#star-search').value); return; } // 提示行可点击:等同回车
     const sug = e.target.closest('.sug');
     if (sug) {
       $('#star-sugs').classList.add('hidden');
@@ -1691,14 +1810,11 @@ function bindEvents() {
     if (t && t.dataset.url) window.csapi.openExternal(t.dataset.url);
   });
 
-  // 搜索建议
-  $('#star-search').addEventListener('input', (e) => {
-    clearTimeout(searchTimer);
-    const q = e.target.value.trim();
-    searchTimer = setTimeout(() => doSearch(q), 400);
-  });
+  // 搜索:显式触发(回车/🔍按钮),输入只出本地缓存即时建议+回车提示——不逐键自动查 LP
+  $('#star-search').addEventListener('input', (e) => renderLocalSugs(e.target.value.trim()));
+  $('#star-search').addEventListener('keydown', (e) => { if (e.key === 'Enter') triggerSearch(e.target.value); });
+  $('#star-search-go')?.addEventListener('click', () => triggerSearch($('#star-search').value));
   $('#star-search').addEventListener('blur', () => {
-    clearTimeout(searchTimer); // 失焦时取消未触发的防抖,否则迟到的结果会重新弹出建议框
     setTimeout(() => $('#star-sugs')?.classList.add('hidden'), 250);
   });
 
@@ -1733,6 +1849,10 @@ function bindEvents() {
   if (storyStyleSel) storyStyleSel.onchange = (e) => { window.csapi.setSetting({ storyStyle: e.target.value }); renderAll(true); };
   const mapStripSel = $('#map-strip-sel');
   if (mapStripSel) mapStripSel.onchange = (e) => { window.csapi.setSetting({ mapStripMode: e.target.value }); renderAll(true); };
+  const minTierSel = $('#min-tier-sel');
+  if (minTierSel) minTierSel.onchange = (e) => { window.csapi.setSetting({ minTier: e.target.value }); renderAll(true); }; // 即时过滤:纯重渲染,不触发任何数据操作
+  const bo1ScoreSel = $('#bo1-score-sel');
+  if (bo1ScoreSel) bo1ScoreSel.onchange = (e) => { window.csapi.setSetting({ bo1Score: e.target.value }); renderAll(true); }; // 纯显示偏好
   const upcomingTimeSel = $('#upcoming-time-sel');
   if (upcomingTimeSel) upcomingTimeSel.onchange = (e) => { window.csapi.setSetting({ upcomingTime: e.target.value }); renderAll(true); };
   const evnSel = $('#ev-name-sel');
@@ -1793,6 +1913,12 @@ function bindEvents() {
   $('#tg-prematch-starred').onchange = (e) => window.csapi.setSetting({ preMatchStarredOnly: e.target.checked });
   $('#tg-results').onchange = (e) => window.csapi.setSetting({ notifyResults: e.target.checked });
   $('#tg-lowpower').onchange = (e) => window.csapi.setSetting({ lowPower: e.target.checked });
+  const vfpsSel = $('#vfps-sel');
+  if (vfpsSel) vfpsSel.onchange = (e) => window.csapi.setSetting({ visualFps: +e.target.value }); // 全局视觉帧率上限:fx 层每帧动态读 SETTINGS,改档即生效
+  const flexTg = $('#tg-flex');
+  if (flexTg) flexTg.onchange = (e) => window.csapi.setSetting({ flexMode: e.target.checked }); // 灵活模式:时钟层每帧读 SETTINGS,即时生效
+  const idleSel = $('#idlefps-sel');
+  if (idleSel) idleSel.onchange = (e) => window.csapi.setSetting({ idleFps: Math.max(15, +e.target.value) }); // 保底帧率,最低 15
   $('#prematch-min').onchange = (e) => window.csapi.setSetting({ preMatchMin: +e.target.value });
   const pandaInput = $('#panda-token');
   if (pandaInput) {
@@ -1925,7 +2051,12 @@ window.csapi.onData((p) => {
   syncGlassMode();
   renderAll(true);
 });
-window.csapi.onSettings((s) => { applySettings(s); });
+window.csapi.onSettings((s) => {
+  const prevStars = JSON.stringify([SETTINGS?.starPlayers, SETTINGS?.starTeams]);
+  applySettings(s);
+  // 关注状态变化(含选手活跃状态落库)立即整卡重绘:在阵标注/置顶排序不等下一个同步周期
+  if (JSON.stringify([SETTINGS?.starPlayers, SETTINGS?.starTeams]) !== prevStars) renderAll(true);
+});
 window.csapi.onMini((m) => { document.body.classList.toggle('mini', !!m); renderAll(true); });
 window.csapi.onLocked((l) => { document.body.classList.toggle('locked', !!l); });
 window.csapi.onStreamers?.((v) => { renderStreamers(v); if (isEnUI() && HERO_M) renderHero(); }); // en:主卡按钮取第一个在播频道,状态到了重绘 hero
@@ -2038,6 +2169,6 @@ function vhsBuild(root) {
     if (now - sizeLast < 80) return;
     sizeLast = now;
     cancelAnimationFrame(sizeRaf);
-    sizeRaf = requestAnimationFrame(() => applySize(true));
+    sizeRaf = requestAnimationFrame(() => { applySize(true); fitRows(); });
   });
 })();

@@ -134,6 +134,20 @@ void main(){ mainImage(gl_FragColor, gl_FragCoord.xy); }`;
   const rmq = window.matchMedia('(prefers-reduced-motion: reduce)');
   let canvas = null, gl = null, U = null, raf = 0, desync = 0, lastDesync = NaN, colA = [1, 1, 1], colB = [1, 1, 1];
   let tA = 0, tB = 0, lastNow = 0, gainA = 1, gainB = 1, tgtA = 1, tgtB = 1, heroRef = null; // 双侧时间轴与 hover 增益
+  let waveFps = 30, lastDraw = 0; // wave 自身设计帧率(内部可调:FXW.setWaveFps;跳帧只省绘制,时间轴照常平滑)
+  // 全局视觉帧率上限(设置 visualFps):0=不限制(动效按各自设计帧率跑);>0=所有动效的公共上限。
+  // 与 wave 设计帧率取小——上限语义只降不升。每帧动态读 SETTINGS,设置改档即生效,无同步代码;
+  // SETTINGS 由 renderer.js 维护(fx.js 先加载,读时判空)。与 lowPower 独立:lowPower=整体停用,visualFps=限制仍在跑的。
+  const effFps = () => {
+    const vf = typeof SETTINGS !== 'undefined' && SETTINGS ? Number(SETTINGS.visualFps) : 0;
+    return Number.isFinite(vf) && vf > 0 ? Math.min(waveFps, vf) : waveFps;
+  };
+  // 失焦判定单一事实源 = body[data-unfocused](renderer 维护、与 CSS 失焦暂停同源):
+  // 主窗 backgroundThrottling:false 使 document.hidden 恒 false,Chromium 内建节流失效,
+  // 焦点信息只能走 push:focus 信号。frame 每帧自检该数据源(失焦即刻自停),恢复由 renderer
+  // 的 onFocus 回调调 syncLoop() 拉起——fx 自身不维护焦点副本,无初始竞态。
+  // 失焦停帧属于低功耗档行为(与 style.css 失焦暂停规则同门槛):特效全开档失焦不削减动效。
+  const unfocusedNow = () => document.body.dataset.lowpower === '1' && document.body.dataset.unfocused === '1';
 
   // hover 侧向增益:鼠标靠近哪半边,那侧波微增亮+加速(离开平滑回落)
   const onMove = (e) => {
@@ -184,7 +198,10 @@ void main(){ mainImage(gl_FragColor, gl_FragCoord.xy); }`;
 
   function frame(now) {
     raf = 0;
-    if (!canvas || !canvas.parentNode || document.hidden || !enabled()) return; // 停帧;渲染器下次 sync 拉起
+    if (!canvas || !canvas.parentNode || document.hidden || unfocusedNow() || !enabled()) return; // 停帧(失焦/隐藏/关效同路);渲染器或 onFocus 下次 sync 拉起
+    const minDelta = 1000 / Math.max(1, effFps()); // 帧率上限:未到间隔不画也不推进时间轴,只续排单链(60fps 调度、effFps 绘制)
+    if (now - lastDraw < minDelta - 0.4) { raf = requestAnimationFrame(frame); return; } // 0.4ms 容差:吸收刷新率与目标的整除抖动,同时保证高刷屏(360Hz)下任何档位实际绘制率不超上限
+    lastDraw = now;
     const dt = lastNow ? Math.min(0.1, (now - lastNow) / 1000) : 0.016; // 挂起后恢复不做大步长跳变
     lastNow = now;
     gainA += (tgtA - gainA) * Math.min(1, dt * 7); gainB += (tgtB - gainB) * Math.min(1, dt * 7); // hover 增益平滑过渡
@@ -198,6 +215,14 @@ void main(){ mainImage(gl_FragColor, gl_FragCoord.xy); }`;
     gl.uniform3f(U.uColB, colB[0], colB[1], colB[2]);
     gl.drawArrays(gl.TRIANGLES, 0, 3);
     raf = requestAnimationFrame(frame);
+  }
+
+  // RAF 调度唯一入口:should 判定与 raf handle 一起做状态机,幂等——focus/blur 任意次切换、
+  // sync 任意次重入,都只可能维持 0 或 1 条调度链,不会叠加
+  function syncLoop() {
+    const should = !!(canvas && canvas.parentNode && !document.hidden && !unfocusedNow() && enabled());
+    if (should && !raf) raf = requestAnimationFrame(frame);
+    else if (!should && raf) { cancelAnimationFrame(raf); raf = 0; } // 显式摘除挂起的帧,不留半条链
   }
 
   // 渲染器每次重绘主卡后调用:按当前 fx 开关/主题挂载或摘除,顺带刷新队色与错相种子
@@ -224,7 +249,12 @@ void main(){ mainImage(gl_FragColor, gl_FragCoord.xy); }`;
       hero.addEventListener('mousemove', onMove);
       hero.addEventListener('mouseleave', onLeave);
     }
-    if (!raf) raf = requestAnimationFrame(frame);
+    syncLoop();
   }
-  window.FXW = { sync };
+  window.FXW = {
+    sync,
+    syncLoop,
+    setWaveFps: (v) => { const n = Math.round(Number(v)); if (n >= 1 && n <= 240) waveFps = n; }, // 运行时可调,frame 下一绘制帧即生效
+    getWaveFps: () => effFps(), // 生效帧率(设计帧率与全局上限取小)
+  };
 })();

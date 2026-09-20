@@ -8,8 +8,10 @@ const zlib = require('zlib');
 const crypto = require('crypto');
 const { Store } = require('./lib/store');
 const { fetchWikiPage, apiQuery, searchPlayers, searchPandaPlayers, lpCooldownUntil } = require('./lib/fetcher');
-const { parseMatches, parseEventMaps, parseEvents, parseTransfers, parsePlayerTeam, parseVrs, parseEventTier, parseEventDates, parseVrsStamp } = require('./lib/parser');
-const { fetchPandaRunning, findForTeams, fetchPandaMatchList, matchKey, mergeFallback } = require('./lib/live');
+const { parseMatches, parseEventMaps, parseEvents, parseTransfers, parsePlayerTeam, parseTeamRoster, parseVrs, parseEventTier, parseEventDates, parseVrsStamp } = require('./lib/parser');
+const { fetchPandaRunning, findForTeams, fetchPandaMatchList, matchKey, mergeFallback, supplementRecent } = require('./lib/live');
+const { learnEvents, lookupEvent } = require('./lib/eventpool');
+const { enrichFromMatches, enrichFromRankings, decorateMatches, capPool, learnAlias, loadAliasCanon, aliasCanon } = require('./lib/teampool');
 const { isThirdPlace } = require('./src/phase'); // 决赛语境闩锁的季军赛豁免
 const I18N = require('./src/i18n'); // 界面文案字典(托盘/通知随界面语言)
 
@@ -96,6 +98,9 @@ const DEFAULTS = {
   autostart: false,
   intervalMin: 3,          // 比赛刷新间隔(分钟)
   lowPower: false,         // 性能优先:关氛围动效 + 失焦暂停动画 + 取景玻璃降至 15fps
+  visualFps: 0,            // 视觉帧率上限:0=不限制(动效按各自设计帧率);240/165/90/60/30=全局硬上限——任何模式(含灵活模式交互时)都不会超过它
+  flexMode: false,         // 灵活模式:光标在窗口上时跑「视觉帧率上限」,离开窗口回落「保底帧率」;关闭则恒为上限
+  idleFps: 30,             // 保底帧率(灵活模式开启时,光标离开窗口后的动效帧率),最低 15;实际不高于「视觉帧率上限」
   bounds: null,
   lastSeenTransferId: null,
   etagMatches: '', etagEvents: '', etagTransfers: '',
@@ -122,6 +127,7 @@ const DEFAULTS = {
   sizePreset: 'm',         // 尺寸预设:mini/s/m/l(布局随窗口实际大小自动分级)
   starPlayers: [],         // [{id, name, href, team, teamSlug, resolvedAt}]
   starTeams: [],           // [{id, name, href}]
+  playerCache: {},         // 搜过的选手档案 {title小写: {title,slug,href,team,...,cachedAt}}(LRU≤100):重复搜索零网络,只随显式搜索/关注解析更新
   captureGlass: true,      // 取景玻璃:抓取窗口背后的桌面画面,渲染层自绘真高斯模糊+边缘折射
 };
 
@@ -173,6 +179,7 @@ function sideStars(teamName, teamHref) {
     }
   }
   for (const p of store.get('starPlayers') || []) {
+    if (p.status === 'retired') continue; // 退役:不出现;下放保留可见性(通知里列名字,是否在阵由界面标注表达)
     // PandaScore 的 teamSlug(如 natus-vincere-cs-go)与比赛侧 Liquipedia slug(Natus_Vincere)字面不等,
     // 剥掉 -cs-go 后缀再做队名归一;NAVI 这类"LP 显示缩写、Panda 存全名"的队靠它才置顶
     const ps = p.teamSlug ? normTeam(String(p.teamSlug).replace(/[-_ ]*cs[-_ ]*go$/i, '')) : '';
@@ -186,30 +193,78 @@ function pushSettings() {
   if (win && !win.isDestroyed()) win.webContents.send('push:settings', store.all());
 }
 
+// 选手缓存入库(LRU≤100,按 cachedAt 淘汰):来源=显式搜索结果与关注解析产物。
+// 不产生任何后台网络任务——增量只随"再搜索"与"已关注的 24h 复核"自然发生,不碰限流
+function cacheUpsertPlayer(rec) {
+  const key = String(rec.title || '').toLowerCase();
+  if (!key) return;
+  const c = store.get('playerCache') || {};
+  c[key] = { ...(c[key] || {}), ...rec, cachedAt: Date.now() };
+  const keys = Object.keys(c);
+  if (keys.length > 100) {
+    keys.sort((a, b) => (c[a].cachedAt || 0) - (c[b].cachedAt || 0));
+    for (const k of keys.slice(0, keys.length - 100)) delete c[k];
+  }
+  store.set('playerCache', c);
+}
+
 async function resolvePlayer(entry) {
+  entry.resolving = true; // 周期复核也亮同步态(短暂)
   try {
-    const r = await fetchWikiPage(entry.id);
+    // panda 形态的 id 是 PandaScore slug(如 w0nderfu1),不保证是 LP 页面名(LP 页叫 W0nderful):
+    // 先用 opensearch 按名字校正页面标题(轻量接口,2s 队列),成功后缓存进 lpTitle 复用。
+    // LP 来源(搜索回退/变阵行)的 id 本就是合法页名,无需校正
+    let title = entry.lpTitle || entry.id;
+    if (!entry.lpTitle && entry.panda) {
+      const hits = await searchPlayers(entry.name || entry.id).catch(() => null);
+      if (!hits) throw new Error('LP 搜索不可用(冷却/网络)'); // 搜索都失败就不再补一刀 parse,不放大限流压力
+      const nm = normTeam(entry.name || entry.id);
+      const hit = hits.length ? (hits.find(h => normTeam(h.title) === nm) || hits[0]) : null;
+      // 命中→用页名;未命中且 id 带 UUID 后缀(Panda 同名消歧 slug)必非 LP 页名,不盲抓注定失败的 parse
+      if (hit) title = hit.title;
+      else if (/-[0-9a-f]{8}-[0-9a-f]{4}-/i.test(entry.id)) throw new Error('LP 页面标题未解析');
+    }
+    const r = await fetchWikiPage(title);
+    entry.lpTitle = title;
     const team = parsePlayerTeam(r.html);
-    entry.team = team ? team.name : '';
-    entry.teamSlug = team ? slugOf(team.href) : '';
+    if (team) {
+      // Team 行在(含自由球员空链接)才覆写队伍;panda 关注的队伍来自 PandaScore,LP 缺行不抹掉
+      if (team.name) { entry.team = team.name; entry.teamSlug = team.href ? slugOf(team.href) : ''; }
+      entry.status = team.status || '';
+      entry.err = '';
+      // 队伍页 roster 分区才是"下放"的判据——选手页 Status 表达职业生涯状态,下放不离队的选手照样 Active
+      // (oSee 实测:选手页 Active,队伍页 7/9 起在预备名单)。结果记 entry.roster 供诊断;
+      // active→active,inactive/former→按 inactive 抑制在阵,认不出回落选手页状态
+      if (entry.teamSlug) {
+        try {
+          const tp = await fetchWikiPage(entry.teamSlug);
+          const r = parseTeamRoster(tp.html, title); // {zone, role} | null:zone=active/inactive/former/coach,role=coach/sub
+          if (r && r.zone) { entry.roster = r.zone; if (r.role) entry.rosterRole = r.role; }
+          entry.status = (r && (r.zone === 'active' || r.zone === 'coach')) ? 'active' : (r && r.zone) ? 'inactive' : entry.status;
+        } catch (e2) { entry.err = 'roster: ' + String(e2.message || e2); } // roster 是关键信号,失败走 6h 重试
+      }
+    } else if (!entry.panda) { entry.team = ''; entry.teamSlug = ''; entry.status = ''; entry.err = ''; }
     entry.resolvedAt = Date.now();
-    entry.err = '';
   } catch (e) {
     entry.err = String(e.message || e);
     entry.resolvedAt = Date.now();
   }
+  entry.resolving = false; // 完成/失败都落位:此后才允许显示"未解析到队伍/解析失败"等终态
+  if (entry.name) cacheUpsertPlayer({ title: entry.name, slug: entry.lpTitle || entry.id, href: entry.href || '', team: entry.team || '', teamSlug: entry.teamSlug || '', panda: !!entry.panda, status: entry.status || '', rosterRole: entry.rosterRole || '' }); // 关注解析产物镜像进缓存:队伍/状态随 24h 复核自然增量
   store.set('starPlayers', store.get('starPlayers')); // 持久化引用修改
   pushSettings();
   checkReminders();
 }
 
-// 启动时对"未解析到队伍"的选手重试一次(限速排队)
+// 启动时补解析关注选手:队伍未知/上次出错 6h 重试;正常条目 24h 复核一次——
+// 下放(被下放但不离队)与转会都只落在选手页的 Team/Status 行上,不定期复核就永远学不到
 async function refreshStarsIfNeeded() {
   const list = store.get('starPlayers') || [];
   for (const p of list) {
-    if ((!p.team || p.err) && Date.now() - (p.resolvedAt || 0) > 6 * 3600e3) {
-      await resolvePlayer(p);
-    }
+    const age = Date.now() - (p.resolvedAt || 0);
+    if ((!p.team || p.err) && age > 6 * 3600e3) await resolvePlayer(p);
+    else if (p.status === undefined) await resolvePlayer(p); // 补丁前入场的存量条目:一次性补拉状态(每个条目只发生一次)
+    else if (age > 24 * 3600e3) await resolvePlayer(p);
   }
 }
 
@@ -352,6 +407,55 @@ async function auditRecentEnded() {
     }
     if (hit) { store.set('endedAt', endedMap); pushData(); }
   } catch { /* 限流/token 失效:保留现有时间戳,下次启动再修 */ }
+}
+
+// LP 主页 Results 区块容量有限,部分已结束场次不被收录:用 PandaScore past 列表补齐 recent 缺口。
+// 判重见 lib/live.js isSameMatch(队伍对 + ≤6h 时间窗),LP 行永远优先、只增不删。
+// 补位行必须每轮重套用:LP 解析会整表替换 recent,只在会话开头补一次的话,
+// 补位行随下一轮替换蒸发(NAVI vs Aurora 实例)——补位源列表存 store('pandaSupplement'),
+// 每轮 LP 解析后无网络开销地重套用;48h 窗外的旧行不再回填
+function reappliedSupplement(recent) {
+  const saved = (store.get('pandaSupplement') || []).filter((r) => (r.endedAt || r.ts || 0) > Date.now() - 48 * 3600e3);
+  return supplementRecent(recent, saved);
+}
+
+// 赛事池装饰:Panda 系行(补位/兜底,特征是无 eventHref)反查池子换上 LP 赛事名/页链/图标,
+// 评级徽章(tierOf 走 eventHref)随之恢复;LP 行原样跳过。幂等,payload() 每次组装都跑;
+// 缓存与 pandaSupplement 存档里始终是原始 Panda 名,装饰只发生在下发管线,信息不丢
+function decorateEvents() {
+  const pool = store.get('eventPool');
+  if (!pool || !Object.keys(pool).length) return;
+  for (const k of ['live', 'upcoming', 'recent']) {
+    for (const m of (data.matches?.[k] || [])) {
+      if (m.eventHref || !m.event) continue;
+      const e = lookupEvent(m.event, pool);
+      if (!e) continue;
+      if (e.name) m.event = e.name;
+      m.eventHref = e.href || '';
+      m.eventIcon = e.icon || '';
+    }
+  }
+}
+let recentSupplemented = false;
+async function supplementRecentFromPanda() {
+  const token = store.get('pandaToken');
+  if (!token) return;
+  try {
+    const list = await fetchPandaMatchList(token);
+    if (!list) return;
+    store.set('pandaSupplement', list.recent || []); // 补位源持久化,供本轮之后的所有 LP 解析重套用
+    { // 赛事池学习:Panda 行与 LP 现表同场配对,记「Panda 赛事名 → LP 赛事名/页链/图标」
+      const pool = store.get('eventPool') || {};
+      if (learnEvents(list, data.matches, pool)) store.set('eventPool', pool);
+    }
+    const before = (data.matches?.recent || []).length;
+    data.matches.recent = reappliedSupplement(data.matches?.recent || []);
+    const added = data.matches.recent.length - before;
+    if (added > 0) {
+      saveCache(); pushData();
+      console.log(`[panda-supplement] recent 补充 ${added} 场(LP 未收录):`, data.matches.recent.filter((m) => m.panda).map((m) => `${m.teamA.name} vs ${m.teamB.name}`).join(' ; '));
+    }
+  } catch (e) { console.error('[panda-supplement]', e.message); }
 }
 
 function kindNonEmpty(kind) {
@@ -545,6 +649,7 @@ async function fetchKind(kind) {
       harvestMatchArchive(fresh.recent || []); // 赛果入本地档案(S 级留 45 天),再把 48h 外的 S 级并回列表
       fresh.recent = mergeMatchArchive(fresh.recent || []);
       data.matches = fresh;
+      data.matches.recent = reappliedSupplement(data.matches.recent); // Panda 补位行逐轮重套用:LP 整表替换不再吞掉已补的场次
     }
     // events/transfers/rankings:内容与上次相同就不再推送/重渲染(304 挡了大部分,这里挡 200 同文)
     const prevJson = kind === 'matches' ? '' : JSON.stringify(kind === 'events' ? data.events : kind === 'transfers' ? data.transfers : data.rankings);
@@ -568,7 +673,8 @@ async function fetchKind(kind) {
     syncPhase[kind] = 'ready';
     meta = { updatedAt: Date.now(), stale: false, err: '' };
     if (kind === 'matches') { trackMatchTransitions(); checkReminders();
-      if (!recentAudited && (data.matches?.recent || []).length) { recentAudited = true; auditRecentEnded(); } }
+      if (!recentAudited && (data.matches?.recent || []).length) { recentAudited = true; auditRecentEnded(); }
+      if (!recentSupplemented && (data.matches?.recent || []).length && store.get('pandaToken')) { recentSupplemented = true; supplementRecentFromPanda(); } }
     if (kind === 'transfers') {
       const rows = data.transfers;
       const lastSeen = store.get('lastSeenTransferId');
@@ -749,6 +855,7 @@ let mapMeta = {}, lastMapHarvestAt = 0;
 
 function cacheFile() { return path.join(app.getPath('userData'), 'cache.json'); }
 function saveCache() {
+  if (useMock) return; // mock 数据绝不落盘:--mock/--shot 运行曾把演示变阵写进真实缓存,用户重启后看到一会儿假数据(mapPool 教训的同族,此处治整包)
   try { fs.writeFileSync(cacheFile(), JSON.stringify({ data, meta, pver: PARSE_VER })); } catch { }
 }
 
@@ -1705,6 +1812,27 @@ function dialogShowUpdate() { // 启动发现更新:一次温和的弹窗(去下
     buttons: [ui('upd.dlg.go'), ui('upd.dlg.later')], defaultId: 0, cancelId: 1, noLink: true,
   }).then((r) => { if (r.response === 0 && UPD.url) shell.openExternal(UPD.url); });
 }
+// ---------- 全量队伍池(LP/Panda/VRS 供数,比赛条目规范字段的唯一出处) ----------
+// payload() 每次组装都过一遍:各源并入池子→把规范名/href/队标/VRS 装饰到三区条目→内容有变才回写 store(跨启动保留)
+let _pool = null, _poolSaved = '', _aliasSaved = '';
+function poolSync() {
+  if (_pool == null) { // 启动首轮:池子与学习别名一起回灌,保证重启后第一次装饰就已归并
+    _pool = store.get('teamPool') || {};
+    loadAliasCanon(store.get('teamAlias'));
+    for (const e of Object.values(_pool)) { // 存量池自愈:带 LP 页链的历史劈叉键(展示名键≠页链身份键)立即归并,不等行重现
+      if (e && e.name && e.href) learnAlias(_pool, e);
+    }
+    _aliasSaved = JSON.stringify(aliasCanon());
+  }
+  enrichFromRankings(_pool, data.rankings);
+  enrichFromMatches(_pool, data.matches); // LP 行页链顺带学「展示名键→页链身份键」别名(LG↔Luminosity 实例)
+  capPool(_pool, 800);
+  decorateMatches(data.matches, _pool);
+  const j = JSON.stringify(_pool);
+  if (j !== _poolSaved) { _poolSaved = j; store.set('teamPool', JSON.parse(j)); }
+  const ja = JSON.stringify(aliasCanon());
+  if (ja !== _aliasSaved) { _aliasSaved = ja; store.set('teamAlias', JSON.parse(ja)); }
+}
 function pushData() {
   if (win && !win.isDestroyed()) win.webContents.send('push:data', payload());
 }
@@ -1712,6 +1840,8 @@ const gpuStatus = () => { try { return app.getGPUFeatureStatus(); } catch { retu
 function payload() {
   tierArchiveLoad(); // 换表后挂回评级归档(幂等,顺带按级别剪枝)
   matchArchiveLoad(); // 同上,赛果档案
+  poolSync(); // 队伍池:并入各源供数,规范字段装饰到比赛条目(幂等)
+  decorateEvents(); // 赛事池:Panda 系行换装 LP 赛事名/页链/图标,评级徽章随之恢复(幂等)
   return {
     data,
     version: app.getVersion(),
@@ -1738,6 +1868,7 @@ const ui = (k, vars) => { let x = I18N.uit(k, uiLang()); if (vars) for (const [q
 const MODERN_TRAY = process.platform === 'win32' && osBuild >= 22000; // Win11 起系统语境菜单为圆角+亚克力风格
 const MENU_W = 252, MENU_ROW = 34, MENU_SEP = 9, MENU_PAD = 12, MENU_STAR = 48; // PAD=上下 5px 内边距+1px 描边×2;STAR=求Star行高(对话框+水月探头,作为普通菜单行嵌在开机自启上方)
 let trayMenuWin = null, trayMenuOpen = false, lastAutoHide = 0, mouseLocked = false; // mouseLocked:鼠标穿透锁(托盘切换);最近一次因失焦被藏的时间:右键托盘会先让菜单失焦被藏,再触发 right-click
+let trayReveal = null, trayRevealTimer = null; // 待弹菜单的位姿与兜底定时器:菜单页画完回执 ready 才 show(先画后弹)
 const trayItems = () => [
   { id: 'toggle', label: ui('tray.toggle'), type: 'action' },
   { id: 'mini', label: ui('tray.mini'), type: 'checkbox', checked: !!store.get('mini') },
@@ -1774,20 +1905,21 @@ function createTrayMenuWin() {
       alwaysOnTop: true, hasShadow: false, transparent: !acrylicSupported,
       backgroundColor: acrylicSupported ? trayBg() : '#00000000', // 透明路径必须全透明;acrylic 路径用主题底色防空帧白闪
       ...(acrylicSupported ? { backgroundMaterial: 'acrylic' } : {}), // 22H2+ 系统亚克力托底;页面再画主题色层+自绘圆角
-      webPreferences: { preload: path.join(__dirname, 'src', 'tray-preload.js'), contextIsolation: true, nodeIntegration: false },
+      webPreferences: { preload: path.join(__dirname, 'src', 'tray-preload.js'), contextIsolation: true, nodeIntegration: false, backgroundThrottling: false }, // 节流关掉:窗口隐藏期间也要渲染帧(预热内容,先画后弹)
     });
     trayMenuWin.setAlwaysOnTop(true, 'screen-saver'); // 档位需高于主窗的 floating
     trayMenuWin.on('blur', hideTrayMenu);
     // hide→show 后 DWM 会丢 acrylic 背板(表现为托盘旁整窗闪白底),show 后立即补挂
     trayMenuWin.on('show', () => { if (acrylicSupported) { try { trayMenuWin.setBackgroundMaterial('acrylic'); } catch { } } });
     trayMenuWin.loadFile(path.join(__dirname, 'src', 'tray-menu.html'));
-    trayMenuWin.webContents.on('did-finish-load', () => { if (trayMenuOpen) trayMenuWin.webContents.send('tray-menu:data', trayData()); }); // 兜底:菜单页晚加载也不空白
+    trayMenuWin.webContents.on('did-finish-load', () => trayMenuWin.webContents.send('tray-menu:data', trayData())); // 无条件预热的兜底:菜单页晚加载/开菜单前主题切换都不空白
   } catch { trayMenuWin = null; } // 创建失败不影响托盘:右键回落原生
 }
 
 function hideTrayMenu() {
   if (trayMenuOpen) lastAutoHide = Date.now(); // 记录"因这次交互被藏"的时刻,供 toggleTrayMenu 识别
   trayMenuOpen = false;
+  trayReveal = null; clearTimeout(trayRevealTimer); trayRevealTimer = null; // 撤销还没 show 的待弹菜单
   if (trayMenuWin && !trayMenuWin.isDestroyed() && trayMenuWin.isVisible()) trayMenuWin.hide();
   // 白闪根因:窗口 hide→show 会丢 acrylic 背板,重挂回来前的第一帧是白的。用完即毁、后台重建,
   // 下次右键拿到的是"从未 hide 过"的新窗 —— 与首次右键(无白闪)完全相同的体验
@@ -1811,8 +1943,25 @@ function toggleTrayMenu() {
     if (x < wa.x) x = wa.x;
     if (y < wa.y) y = Math.min(wa.y + wa.height - H - 4, Math.round(cur.y) + 24); // 光标贴顶(任务栏在上)则改弹下方
     if (acrylicSupported) { try { trayMenuWin.setBackgroundColor(trayBg()); } catch { } } // 主题可能已切换
-    trayMenuWin.setBounds({ x, y, width: MENU_W, height: H });
+    // 先画后弹:数据发给隐藏中的菜单窗,页面画完回执 ready 再落位 show。旧流程 send 完立刻 show,
+    // 首帧常是"空菜单壳"(条目还没渲染),观感即"闪一下才出字,闪时顶部一条黑"(空 .menu 的底色+描边)
+    trayReveal = { x, y, h: H };
     trayMenuWin.webContents.send('tray-menu:data', trayData());
+    clearTimeout(trayRevealTimer);
+    trayRevealTimer = setTimeout(revealTrayMenu, 220); // 页面异常不回执时兜底,退化为旧时序
+  } catch { // 自绘菜单任何异常都回落原生菜单,右键功能不能丢
+    hideTrayMenu();
+    try { if (tray && !tray.isDestroyed() && trayMenu) tray.popUpContextMenu(trayMenu); } catch { }
+  }
+}
+
+function revealTrayMenu() { // 菜单页画完(tray-menu:ready 回执)或 220ms 兜底到点:落位再 show
+  clearTimeout(trayRevealTimer); trayRevealTimer = null;
+  const b = trayReveal; trayReveal = null;
+  if (!b) return;
+  try {
+    if (!trayMenuWin || trayMenuWin.isDestroyed()) return;
+    trayMenuWin.setBounds({ x: b.x, y: b.y, width: MENU_W, height: b.h });
     trayMenuWin.show();
     trayMenuWin.focus(); // 聚焦以支持失焦即关 + Esc 关闭
     trayMenuOpen = true;
@@ -1851,6 +2000,7 @@ function runTrayAction(id) { // 与原原生菜单 click 处理器逐条等价(�
 }
 
 ipcMain.on('tray-menu:click', (e, id) => { hideTrayMenu(); if (typeof id === 'string' && id) runTrayAction(id); });
+ipcMain.on('tray-menu:ready', () => { if (trayReveal) revealTrayMenu(); }); // 菜单页每画完一帧数据回执一次;仅在有待弹菜单时生效
 ipcMain.on('tray-menu:hide', hideTrayMenu);
 
 function makeTray() {
@@ -1973,17 +2123,31 @@ ipcMain.on('set:setting', (e, kv) => {
 // ---------- 关注(高光选手/队伍) ----------
 ipcMain.handle('search:players', async (e, q) => {
   const query = String(q || '').trim().slice(0, 40);
-  // 优先 PandaScore(已配 token 时):一次拿到名字+当前队伍,绕开 Liquipedia IP 限流
+  // 双源合并:PandaScore 优先(带当前队伍,免二次解析),LP opensearch 始终并入——
+  // 教练/分析员等角色 PandaScore 不收录(zonic/xtqzzz 实测),旧逻辑只在 Panda 空手时才问 LP,全职教练永远搜不出
   const token = store.get('pandaToken');
-  let items = [];
+  const items = [];
+  let pandaErr = false;
   if (token) {
-    try { items = await searchPandaPlayers(query, token); }
-    catch { /* token 失效/配额尽/网络问题:回落 Liquipedia */ }
+    try { items.push(...await searchPandaPlayers(query, token)); }
+    catch { pandaErr = true; /* token 失效/配额尽/网络问题 */ }
   }
-  if (!items.length) { // Panda 空(未配 token/没搜到)再问 Liquipedia,两路全空才报错
-    try { items = await searchPlayers(query); }
-    catch (err) { return { items: [], err: String(err.message || err) }; }
+  let lpErr = null;
+  try {
+    const seen = new Set(items.map(j => String(j.title || '').toLowerCase()));
+    for (const it of await searchPlayers(query)) {
+      const key = String(it.title || '').toLowerCase();
+      if (!key || seen.has(key)) continue; // 同人双源去重(Panda 游戏名 vs LP 页名,大小写归一)
+      seen.add(key);
+      items.push(it);
+    }
+  } catch (err) { lpErr = err; }
+  if (!items.length) {
+    if (lpErr && (pandaErr || !token)) return { items: [], err: String(lpErr.message || lpErr) };
+    return { items: [], err: '' };
   }
+  for (const it of items.slice(0, 8)) cacheUpsertPlayer({ title: it.title, slug: it.slug || '', href: it.href || '', team: it.team || '', teamSlug: it.teamSlug || '', source: it.slug ? 'panda' : 'lp' });
+  pushSettings(); // 缓存更新同步渲染层:下次输入的本地即时建议立刻可见
   return { items: items.slice(0, 8), err: '' };
 });
 ipcMain.handle('copy-text', (e, t) => { clipboard.writeText(String(t ?? '').slice(0, 500)); return true; });
@@ -2018,17 +2182,23 @@ ipcMain.handle('star:add-player', async (e, { name, href, slug: slugIn, pandaTea
   if (!slug) return { ok: false };
   const list = store.get('starPlayers') || [];
   const dup = (s) => String(s || '').toLowerCase();
-  if (list.some(p => dup(p.id) === dup(slug) || (name && dup(p.name) === dup(name)))) return { ok: true, dup: true };
+  const exist = list.find(p => dup(p.id) === dup(slug) || (name && dup(p.name) === dup(name)));
+  if (exist) {
+    // 重复关注不做白回:缺状态/出错/超 24h 的旧条目顺手补解析(用户重复关注常就是想"刷新")
+    if (exist.status === undefined || exist.err || Date.now() - (exist.resolvedAt || 0) > 24 * 3600e3) resolvePlayer(exist);
+    return { ok: true, dup: true };
+  }
   const entry = {
     id: slug, name: name || slug, href: href || '',
     team: pandaTeam || hintTeam || '', teamSlug: pandaTeam ? String(pandaTeamSlug || '') : hintTeam ? slugOf(hintHref) : '',
     panda: !!pandaTeam,
     resolvedAt: (pandaTeam || hintTeam) ? Date.now() : 0,
+    resolving: true, // 队伍/状态解析在途:列表先亮"正在同步中",不闪"未解析到队伍"(完成/失败时落位)
   };
   list.push(entry);
   store.set('starPlayers', list);
   pushSettings();
-  if (!entry.team) resolvePlayer(entry); // 队伍未知才去解析,完成后推送
+  resolvePlayer(entry); // 队伍未知才需要解析;已知也要拉 Status——下放不离队的选手只有选手页 Status 行能看出来
   return { ok: true };
 });
 ipcMain.on('star:remove-player', (e, id) => {
@@ -2387,6 +2557,7 @@ app.whenReady().then(async () => {
     } catch { /* 诊断用 */ }
   }, 30e3);
   store = new Store(path.join(app.getPath('userData'), 'widget-store.json'), DEFAULTS);
+  if (store.get('hoverUnlimited') === true) store.set('flexMode', true); // 旧键迁移:「悬停解除上限」→「灵活模式」
   preShotTheme = store.get('theme'); preShotMapPool = store.get('mapPool'); // 截图模式结束后还原
   syncNativeTheme(); // 原生控件(下拉弹窗)深浅随应用主题
   registerDisplayMedia(); // 取景玻璃:getDisplayMedia 自动放行
