@@ -9,7 +9,7 @@ const crypto = require('crypto');
 const { Store } = require('./lib/store');
 const { fetchWikiPage, apiQuery, searchPlayers, searchPandaPlayers, lpCooldownUntil } = require('./lib/fetcher');
 const { parseMatches, parseEventMaps, parseEvents, parseTransfers, parsePlayerTeam, parseTeamRoster, parseVrs, parseEventTier, parseEventDates, parseVrsStamp } = require('./lib/parser');
-const { fetchPandaRunning, findForTeams, fetchPandaMatchList, matchKey, mergeFallback, supplementRecent } = require('./lib/live');
+const { fetchPandaRunning, findForTeams, fetchPandaMatchList, matchKey, mergeFallback, pandaRecentPair, supplementRecent } = require('./lib/live');
 const { learnEvents, lookupEvent } = require('./lib/eventpool');
 const { enrichFromMatches, enrichFromRankings, decorateMatches, capPool, learnAlias, loadAliasCanon, aliasCanon } = require('./lib/teampool');
 const { isThirdPlace } = require('./src/phase'); // 决赛语境闩锁的季军赛豁免
@@ -61,27 +61,9 @@ let preShotTheme = null, preShotMapPool = null; // 截图模式开始前的用�
 let preShotStoreFile = null; // 截图模式开始前的 store 文件原文(will 级还原:演示数据一律不落盘)
 let shotMapPool = null;      // mock 演示图序:仅内存(此前 store.set 曾把演示图序写进用户真实缓存)
 let saveTimer = null;        // 窗口 bounds 防抖落盘定时器(截图还原前要取消)
-let wanjiqi = null; // 玩机器直播间(斗鱼 6657)开播状态 { live, title };null=尚未探测到
-// 斗鱼房间页内嵌 JSON 带 show_status(1=开播):每 5 分钟摸一次;标题不再是玩机器(房间易主/接口改版)时
-// 保留旧状态不动,免得按钮误隐。玩机器不播所有比赛,主卡按钮只在开播时显示
-async function pollWanjiqi() {
-  try {
-    const res = await fetch('https://www.douyu.com/6657', {
-      headers: { 'User-Agent': 'Mozilla/5.0', 'Accept-Language': 'zh-CN,zh;q=0.9' },
-      signal: AbortSignal.timeout(12000),
-    });
-    const html = await res.text();
-    const seg = (html.split('show_status')[1] || '').slice(0, 40);
-    const status = Number((seg.match(/:\s*(\d)/) || [])[1]);
-    const nick = (html.split('nickname')[1] || '').slice(0, 60);
-    if (!nick.includes('玩机器')) return;
-    const next = { live: status === 1 };
-    if (!wanjiqi || next.live !== wanjiqi.live) { wanjiqi = next; pushData(); }
-    else wanjiqi = next;
-  } catch { /* 探测失败保留现状,下一轮再试 */ }
-}
-setInterval(pollWanjiqi, 5 * 60e3);
-pollWanjiqi();
+// 玩机器(斗鱼 6657)开播状态不再单独轮询:与解说列表共用 refreshStreamers 的探测结果(单一事实源,
+// show_status+videoLoop 双判据)。此前 pollWanjiqi 每 5min 抓同一房间页且只看 show_status,轮播期间
+// 主卡按钮与页脚圆点对同一场直播给出两个相反结论;派生函数见 wanjiqiState()
 let newTransferIds = [];
 let miniBounds = null;
 
@@ -134,6 +116,10 @@ const DEFAULTS = {
 // Win11 22H2+ 支持 acrylic 背景
 const osBuild = parseInt(os.release().split('.')[2] || '0', 10);
 const acrylicSupported = process.platform === 'win32' && osBuild >= 22621;
+// 【可达性】frost/liquid 主题已从用户可选清单移除(现有七主题不含):本函数在用户路径恒 false,
+// 玻璃全链(renderer 取景视频流/几何轮询 + main 侧 glass-fallback 截图兜底)仅 --shot=frost/liquid
+// 开发口可达,生产为休眠代码。若主题回归,先修 PERF-AUDIT 记录的兜底无回停/互杀两隐患再放开;
+// 长期不回归则此链可整体摘除
 const glassTheme = () => ['frost', 'liquid'].includes(store.get('theme'));
 // DWM 系统背板 acrylic:仅 frost 且未开启取景玻璃时使用(液态主题的折射需要自绘)
 const acrylic = () => store.get('theme') === 'frost' && acrylicSupported && !captureGlassOn();
@@ -282,13 +268,6 @@ function loadTrackState() {
     cachedUpdatedAt = c.meta?.updatedAt || 0;
   } catch { }
 }
-function saveTrackState() {
-  try {
-    fs.writeFileSync(cacheFile(), JSON.stringify({
-      data, meta, pver: PARSE_VER, notifiedPre: [...notifiedPre].slice(-200), prevLive: [...prevLiveIds].slice(-200),
-    }));
-  } catch { }
-}
 
 function checkReminders() {
   if (!store.get('notifyPreMatch') || !Notification.isSupported()) return;
@@ -310,7 +289,7 @@ function checkReminders() {
       });
       n.on('click', () => showWindow());
       n.show();
-      saveTrackState();
+      saveCache();
     }
   }
 }
@@ -320,6 +299,7 @@ function trackMatchTransitions() {
   const cur = new Set((data.matches?.live || []).map(m => m.id));
   // 结束时刻:app 在场观测到转变 = 精确;重启后从缓存发现 = 近似(以缓存同步时间为准)
   const endedMap = store.get('endedAt') || {};
+  let endedDirty = false; // 有实际增删才写 store:该函数每数据周期都跑,无变化的整 JSON 重写是白费
   for (const id of prevLiveIds) {
     if (cur.has(id) || endedMap[id]) continue;
     const fin = (data.matches?.recent || []).find(x => x.id === id);
@@ -329,17 +309,30 @@ function trackMatchTransitions() {
       : sessionPolled
       ? { ts: Date.now() }
       : { ts: cachedUpdatedAt || Date.now(), approx: true };
+    endedDirty = true;
   }
   // 只保留当前 recent 引用的条目,防止无限增长
   const keep = new Set((data.matches?.recent || []).map(m => m.id));
-  for (const id of Object.keys(endedMap)) if (!keep.has(id)) delete endedMap[id];
+  for (const id of Object.keys(endedMap)) if (!keep.has(id)) { delete endedMap[id]; endedDirty = true; }
   for (const id of [...realEnded.keys()]) if (!keep.has(id)) realEnded.delete(id);
+  // 自愈剪除:结束时刻相对开赛超过场时上限(再慢的 BO 系列也不会 >8h)= 曾被同队再战误盖的脏值
+  // (2026-09-20 实例:前日场被当日新场的结束时刻覆盖)。删掉后显示回退开赛近似,不再冒充刚结束;panda-* 键无时刻段自动跳过
+  for (const id of Object.keys(endedMap)) {
+    const startTs = Number(id.split('|')[2]);
+    if (startTs && endedMap[id]?.ts - startTs > 8 * 3600e3) { delete endedMap[id]; endedDirty = true; }
+  }
+  for (const [id, ts] of [...realEnded]) {
+    const startTs = Number(id.split('|')[2]);
+    if (startTs && ts - startTs > 8 * 3600e3) realEnded.delete(id);
+  }
   for (const m of data.matches?.recent || []) {
     const real = realEnded.get(m.id); // LP 的 recent 行是重新解析的对象,核实值每次都覆盖,修掉历史误盖的"发现时刻"
     const e = real ? { ts: real } : endedMap[m.id];
     if (e) { m.endedAt = e.ts; m.endedApprox = real ? false : !!e.approx; }
+    else if (m.endedAt && m.ts && m.endedAt - m.ts > 8 * 3600e3) { delete m.endedAt; delete m.endedApprox; } // 缓存行烙着的历史误盖值(saveCache 持久化过整行):映射已剪但行值会自我延续,超场时上限的一并清除;panda 行真实 endedAt 在场时内不受影响
   }
-  store.set('endedAt', endedMap);
+  if (data.matches?.recent) data.matches.recent.sort((a, b) => (b.endedAt || b.ts || 0) - (a.endedAt || a.ts || 0)); // 回填后重排:排序键与显示键(endedAt||ts)保持一致,否则刚结束的行会按开赛时刻沉进昨天区间
+  if (endedDirty) store.set('endedAt', endedMap);
   if (store.get('notifyResults') && Notification.isSupported()) {
     for (const id of prevLiveIds) {
       if (cur.has(id)) continue;
@@ -356,7 +349,7 @@ function trackMatchTransitions() {
   }
   prevLiveIds = cur;
   sessionPolled = true;
-  saveTrackState();
+  saveCache();
 }
 
 // Liquipedia 被限流时的比赛列表兜底:PandaScore 拉基础字段;限流解除后下一次成功抓取自动覆盖切回
@@ -391,14 +384,11 @@ async function auditRecentEnded() {
     const endedMap = store.get('endedAt') || {};
     let hit = false;
     for (const m of rec) {
-      const key = matchKey(m.teamA?.name, m.teamB?.name);
-      const fin = list.recent.find((r) => {
-        const near = !m.ts || !r.ts || Math.abs(r.ts - m.ts) <= 30 * 60e3;
-        return (matchKey(r.teamA?.name, r.teamB?.name) === key
-          || (near && fuzzyPair(m.teamA?.name, m.teamB?.name, r.teamA?.name, r.teamB?.name)))
-          && (r.endedAt || r.ts || 0) > (m.ts || 0) - 3600e3
-          && (r.endedAt || r.ts || 0) > Date.now() - 12 * 3600e3;
-      });
+      const prev = endedMap[m.id];
+      if (prev?.ts && !prev.approx && m.ts && prev.ts - m.ts < 8 * 3600e3) continue; // 已有可信真实值(结束-开赛在场时上限内)不覆盖:本审计只精修近似值/补缺失,严禁拿同队再战新场改写旧场
+      const fin = list.recent.find((r) => pandaRecentPair(m, r, fuzzyPair)
+        && (r.endedAt || r.ts || 0) > (m.ts || 0) - 3600e3
+        && (r.endedAt || r.ts || 0) > Date.now() - 12 * 3600e3);
       if (!fin?.endedAt) continue;
       realEnded.set(m.id, fin.endedAt);
       endedMap[m.id] = { ts: fin.endedAt };
@@ -854,9 +844,9 @@ function fuzzyTeamEq(x, y) { // 弹层里是队伍短名(PARIVISION/Magic),与�
 let mapMeta = {}, lastMapHarvestAt = 0;
 
 function cacheFile() { return path.join(app.getPath('userData'), 'cache.json'); }
-function saveCache() {
+function saveCache() { // cache.json 唯一写入口:数据与追踪状态(判重/转变检测)一并落盘。此前 saveTrackState 与本函数双写互覆,notifiedPre/prevLive 从不落盘存活
   if (useMock) return; // mock 数据绝不落盘:--mock/--shot 运行曾把演示变阵写进真实缓存,用户重启后看到一会儿假数据(mapPool 教训的同族,此处治整包)
-  try { fs.writeFileSync(cacheFile(), JSON.stringify({ data, meta, pver: PARSE_VER })); } catch { }
+  try { fs.writeFileSync(cacheFile(), JSON.stringify({ data, meta, pver: PARSE_VER, notifiedPre: [...notifiedPre].slice(-200), prevLive: [...prevLiveIds].slice(-200) })); } catch { }
 }
 
 function startScheduler() {
@@ -905,6 +895,7 @@ const STREAMERS = [
 ];
 const streamerStatus = { updatedAt: 0, twitchOn: isShot, list: STREAMERS.map((s) => ({ ...s, live: false, err: '' })) }; // twitchOn=截图模式默认真,保住 en 演示的开播绿点;正常运行由凭证决定
 let lastStreamersAt = Date.now(), streamerPolling = false;
+let lastWjLive = null; // 上一轮玩机器开播结论(null=未知):翻转时立即 pushData,主卡按钮不等下一轮比赛同步
 
 async function fetchStreamerLive(entry) {
   const url = entry.platform === 'douyu' ? `https://www.douyu.com/${entry.room}`
@@ -977,11 +968,12 @@ async function refreshStreamers() {
   streamerPolling = true;
   try {
     const list = streamerStatus.list;
+    const uiLang = (store && store.get('uiLang')) || 'zh'; // 只轮询当前界面语言的解说:渲染层本来就按语言过滤展示,另一语言的白采即纯浪费(en 界面不抓斗鱼/虎牙,zh 界面不打 Twitch);切换语言后下一轮(≤2min)自动跟上
     const twitchOn = twitchCreds().ok;
     streamerStatus.twitchOn = twitchOn;
     if (twitchOn) {
       try {
-        await refreshTwitchBatch(list.filter((s) => s.platform === 'twitch' && Date.now() >= (s.coolUntil || 0)));
+        await refreshTwitchBatch(list.filter((s) => s.platform === 'twitch' && s.lang === uiLang && Date.now() >= (s.coolUntil || 0)));
         for (const s of list) if (s.platform === 'twitch') s.err = '';
       } catch (e) {
         const errText = String(e.message || e);
@@ -991,7 +983,7 @@ async function refreshStreamers() {
     } else {
       for (const s of list) if (s.platform === 'twitch') { s.live = false; s.err = ''; } // 未配置:恒不在线,渲染层同步隐藏
     }
-    for (const entry of list.filter((s) => s.platform !== 'twitch')) {
+    for (const entry of list.filter((s) => s.platform !== 'twitch' && s.lang === uiLang)) {
       if (Date.now() < (entry.coolUntil || 0)) continue;
       try {
         entry.live = await fetchStreamerLive(entry);
@@ -1003,6 +995,9 @@ async function refreshStreamers() {
       await new Promise((r) => setTimeout(r, 1500));
     }
     streamerStatus.updatedAt = Date.now();
+    const wj = wanjiqiState(); // 开播翻转(含未知→已知)立即推数据:主卡按钮即时跟上,旧 pollWanjiqi 的即时推送语义保留在此
+    const wjLive = wj ? wj.live : null;
+    if (wjLive !== lastWjLive) { lastWjLive = wjLive; pushData(); }
     if (win && !win.isDestroyed()) win.webContents.send('push:streamers', streamerStatus);
   } finally {
     streamerPolling = false;
@@ -1064,16 +1059,11 @@ async function confirmStaleLive(cands) {
   const live = data.matches?.live || [];
   let removed = false;
   for (const m of cands) {
-    const key = matchKey(m.teamA?.name, m.teamB?.name);
-    const fin = list.recent.find((r) => {
-      const near = !m.ts || !r.ts || Math.abs(r.ts - m.ts) <= 30 * 60e3;
-      return (matchKey(r.teamA?.name, r.teamB?.name) === key
-        || (near && fuzzyPair(m.teamA?.name, m.teamB?.name, r.teamA?.name, r.teamB?.name)))
-        && (r.endedAt || r.ts || 0) > (m.ts || 0) - 3600e3
-        && (r.endedAt || r.ts || 0) > now - 12 * 3600e3;
-    });
+    const fin = list.recent.find((r) => pandaRecentPair(m, r, fuzzyPair)
+      && (r.endedAt || r.ts || 0) > (m.ts || 0) - 3600e3
+      && (r.endedAt || r.ts || 0) > now - 12 * 3600e3);
     if (!fin) continue;
-    finishedKeys.set(key, now + 24 * 3600e3);
+    finishedKeys.set(matchKey(m.teamA?.name, m.teamB?.name), now + 24 * 3600e3);
     if (fin.endedAt || fin.ts) realEnded.set(m.id, fin.endedAt || fin.ts);
     const i = live.indexOf(m);
     if (i >= 0) { live.splice(i, 1); removed = true; }
@@ -1463,8 +1453,10 @@ function reassertBurst(reason) {
 }
 function startPinKeepTop() {
   stopPinKeepTop();
-  // 150ms 轮询兜底(Win+D 的外部 SW_HIDE 不派发事件,轮询是唯一可靠手段):被收起后最迟 150ms 回到桌面;
-  // 两次轻量状态检查,无常驻开销
+  // 150ms 轮询兜底(Win+D 的外部 SW_HIDE 不派发事件,轮询是唯一可靠手段):被收起后最迟 150ms 回到桌面。
+  // 可见性/斗篷检查每拍都做(轻量 Electron 内部调用);Z 序逐窗原生遍历(syncDesktopCover,沿 Z 序最多
+  // 120/160 次 GetWindow FFI)降频到每 3 拍一跑(≈450ms):桌面盖板抬起稍缓但人感无差异,省掉 2/3 常驻 FFI
+  let coverTick = 0;
   pinTopTimer = setInterval(() => {
     if (!win || win.isDestroyed()) return stopPinKeepTop();
     if (!store.get('deskPin') || pinUserHidden) return;
@@ -1473,7 +1465,7 @@ function startPinKeepTop() {
       else if (!win.isVisible()) reassertBurst('定时器·被隐藏');
       else {
         // 显示桌面不改变任何可见性状态,只把桌面窗口盖上来 —— 专检这种"盖板"并临时置顶抬起
-        syncDesktopCover();
+        if (coverTick++ % 3 === 0) syncDesktopCover();
         // 可见≠在桌面上:显示桌面态下被斗篷的窗口全套可见性检查都过,只有 DWM 属性能看出来
         const hwnd = hwndOf();
         if (hwnd && isCloaked(hwnd)) {
@@ -1683,7 +1675,7 @@ function ghGet(url) { // GitHub API 小助手:gzip + UA;不走 fetcher 的 LP �
 }
 async function checkUpdate(manual) {
   lastUpdCheckAt = Date.now();
-  if (process.env.RW_UPD_DEMO) { // 审阅用临时钩子(发布打包前删除):伪造"有新版本",走与真实完全相同的展示路径;不发请求、不写 updateSeen
+  if (!app.isPackaged && process.env.RW_UPD_DEMO) { // 审阅用钩子:伪造"有新版本",走与真实完全相同的展示路径;不发请求、不写 updateSeen。isPackaged 门控:防再次随版发布
     UPD.state = 'available'; UPD.version = '0.0.2'; UPD.url = `https://github.com/${UPD.repo}/releases`; UPD.canInstall = true;
     UPD.notes = { code: '惊蛰', quote: '微雨众卉新,一雷惊蛰始。' };
     pushData();
@@ -1772,7 +1764,7 @@ async function updInstall() {
     const expect = line ? line.trim().split(/\s+/)[0].toLowerCase() : '';
     const got = crypto.createHash('sha256').update(fs.readFileSync(pkgPath)).digest('hex');
     if (!/^[0-9a-f]{64}$/.test(expect) || got !== expect) { try { fs.rmSync(pkgPath, { force: true }); } catch { } throw new Error('sha256'); }
-    UPDDL.phase = 'ready'; UPDDL.msg = exePath; updDlPush();
+    UPDDL.phase = 'ready'; UPDDL.msg = pkgPath; updDlPush();
   } catch (e) {
     UPDDL.phase = 'error'; UPDDL.msg = e.message; updDlPush();
   }
@@ -1837,7 +1829,14 @@ function pushData() {
   if (win && !win.isDestroyed()) win.webContents.send('push:data', payload());
 }
 const gpuStatus = () => { try { return app.getGPUFeatureStatus(); } catch { return null; } }; // 调试面板诊断软渲染(gpu_compositing=disabled_software=整窗 CPU 光栅)
-function payload() {
+// 玩机器开播状态三态派生:null=未知(首轮未完成/探测失败从未确认开播)→渲染层按钮保留;{live} 才是确定结论
+function wanjiqiState() {
+  const e = streamerStatus.list.find((s) => s.key === 'wanjiqi');
+  if (!e || !streamerStatus.updatedAt) return null;
+  if (e.err && !e.live) return null; // 探测失败保留按钮,免得误隐(与旧 pollWanjiqi 失败语义一致)
+  return { live: !!e.live };
+}
+function payload(initial) {
   tierArchiveLoad(); // 换表后挂回评级归档(幂等,顺带按级别剪枝)
   matchArchiveLoad(); // 同上,赛果档案
   poolSync(); // 队伍池:并入各源供数,规范字段装饰到比赛条目(幂等)
@@ -1845,8 +1844,8 @@ function payload() {
   return {
     data,
     version: app.getVersion(),
-    meta: { ...meta, newTransferIds, wanjiqi, sync: syncPhase, update: { state: UPD.state, version: UPD.version, url: UPD.url, canInstall: UPD.canInstall, notes: UPD.notes, dl: { ...UPDDL } } },
-    settings: store.all(),
+    meta: { ...meta, newTransferIds, wanjiqi: wanjiqiState(), sync: syncPhase, update: { state: UPD.state, version: UPD.version, url: UPD.url, canInstall: UPD.canInstall, notes: UPD.notes, dl: { ...UPDDL } } },
+    ...(initial ? { settings: store.all() } : {}), // settings 仅首屏握手携带:运行期设置走 push:settings 专用通道,push:data 每次附带一份全量(含凭证字段)是死载荷
     acrylicSupported,
     gpu: gpuStatus(),
     glassCaptureActive: captureGlassOn(),
@@ -2028,7 +2027,8 @@ let trayMenu = null; // 最近一次构建的托盘菜单(探针验证勾选同�
 
 function applyAutoLaunch() {
   try {
-    app.setLoginItemSettings({ openAtLogin: store.get('autostart'), path: process.execPath });
+    // portable 下 process.execPath 指向 %TEMP% 解压出的内层 exe(版本变/清临时文件即失效),须注册用户双击的外层 exe;与 updApplyRestart 的口径一致
+    app.setLoginItemSettings({ openAtLogin: store.get('autostart'), path: process.env.PORTABLE_EXECUTABLE_FILE || process.execPath });
   } catch { }
 }
 
@@ -2041,7 +2041,7 @@ ipcMain.on('unlock', () => {
 ipcMain.on('app:quit', () => { quitting = true; app.quit(); });
 
 // ---------- IPC ----------
-ipcMain.handle('get:initial', () => payload());
+ipcMain.handle('get:initial', () => payload(true));
 // 手动刷新(题头同步点)冷却:bootstrapData 是 4 个页面 + 图序采集的串行队列,
 // 连点会把整条队列反复堆进共享限速器,容易触发 Liquipedia 封禁。30s 冷却 + 重入保护。
 let lastManualRefreshAt = 0;
@@ -2355,8 +2355,9 @@ async function runShots() {
   // 还原截图前的用户设置(主题/图序缓存):截图只是演示,不在用户 store 里留演示数据
   try { if (preShotTheme) store.set('theme', preShotTheme); if (preShotMapPool) store.set('mapPool', preShotMapPool); } catch { }
   // 整文件还原:覆盖截图期间的一切写盘(演示星标/bounds/etag/lastSeenTransferId 等);
-  // 先取消窗口 bounds 的 400ms 防抖落盘,防止还原后再被旧定时器覆盖
+  // 先取消窗口 bounds 的 400ms 防抖落盘与 store 自身的写盘防抖,防止还原后再被旧定时器覆盖
   try { clearTimeout(saveTimer); } catch { }
+  try { store.cancelPending(); } catch { }
   try { if (preShotStoreFile != null) fs.writeFileSync(store.file, preShotStoreFile); } catch { }
   console.log('[shot] all done');
   app.exit(0);
@@ -2371,17 +2372,17 @@ function probeModes() {
     try {
       setMini(true); await sleep(700);
       let b = win.getBounds();
-      log('1.mini进入:', store.get('mini') === true && b.width === 240 && b.height === 104, `${b.width}x${b.height}`);
-      win.setBounds({ width: 240, height: 340 }); await sleep(120); // 模拟用户把迷你条往下拖
+      log('1.mini进入:', store.get('mini') === true && b.width === MINI_SIZE.width && b.height === MINI_SIZE.height, `${b.width}x${b.height}`); // 断言引用常量:硬编码尺寸会随预设漂移而失准,失准的自检比没有更危险
+      win.setBounds({ width: MINI_SIZE.width, height: MINI_SIZE.height + 180 }); await sleep(120); // 模拟用户把迷你条往下拖(越过 MINI_EXIT 高度线)
       autoModeBySize(); await sleep(500);
       b = win.getBounds();
-      log('2.拖大退出迷你:', store.get('mini') === false, '尺寸≥普通最小档:', b.width >= 300 && b.height >= 420, `${b.width}x${b.height}`);
+      log('2.拖大退出迷你:', store.get('mini') === false, '尺寸≥普通最小档:', b.width >= SIZE_PRESETS.s.width && b.height >= SIZE_PRESETS.s.height, `${b.width}x${b.height}`);
       log('3.新尺寸已持久化:', JSON.stringify(store.get('bounds')?.width) === String(b.width));
       const ctx = trayMenu;
       log('4.托盘勾选同步:', ctx ? (ctx.items[1].label === '迷你模式' && ctx.items[1].checked === store.get('mini')) : 'n/a(无菜单)');
       const r = await win.webContents.executeJavaScript(`(function(){ if (!DATA?.matches?.upcoming?.length) return { skip: true, cd: '' }; DATA.matches.live = []; renderAll(true); return { skip: false, cd: document.querySelector('[data-cd]')?.textContent || '' }; })()`);
       log('5.倒计时同步填充:', r.skip ? 'n/a(无 upcoming)' : /^\d{2}:\d{2}:\d{2}$/.test(r.cd), r.cd || '');
-      log('6.普通模式最小档钳制:', (() => { win.setBounds({ width: 200, height: 200 }); return win.getBounds().width >= 300; })());
+      log('6.普通模式最小档钳制:', (() => { win.setBounds({ width: 200, height: 200 }); return win.getBounds().width >= SIZE_PRESETS.s.width; })());
       log('7.MiSans加载:', await win.webContents.executeJavaScript(`document.fonts.check('12px MiSans')`));
       // 8: 置顶开关注入序列(外部 PS1 采样真实 WS_EX_TOPMOST 对齐验证)
       log('8.置顶序列: OFF开始'); win.setAlwaysOnTop(false); await sleep(1500);
@@ -2398,6 +2399,7 @@ function probeModes() {
     } catch (e) {
       log('ERR', e.message);
     }
+    try { store.flush(); } catch { } // app.exit 不走 before-quit:探针写过的设置(mini/onTop 还原)须手动冲盘
     app.exit(0);
   }, 3000);
 }
@@ -2428,6 +2430,7 @@ function probePin() {
       showWindow();
       log('restored:', win.isVisible());
     } catch (e) { log('ERR', e.message); }
+    try { store.flush(); } catch { } // app.exit 不走 before-quit:deskPin 还原须手动冲盘
     app.exit(0);
   }, 3000);
 }
@@ -2550,13 +2553,20 @@ app.whenReady().then(async () => {
   setTimeout(() => { try { logHide('GPU加速状态(25s后): ' + JSON.stringify(app.getGPUFeatureStatus())); } catch { /* 忽略 */ } }, 25000);
   // 进程级 CPU 画像:光效烧 CPU 必须分清进程——Renderer=主线程/光栅,GPU=合成/呈现,Browser=主进程。
   // 每 30s 打一次,只打占用 >3% 的进程,无占用不刷屏;与设置里逐个关光效配合可锁定元凶层
-  setInterval(() => {
+  if (!app.isPackaged) setInterval(() => { // 打包态无 console 可看(死重量),仅开发态保留;注意口径=进程累计均值,与任务管理器瞬时值不可直接比
     try {
       const rows = app.getAppMetrics().filter((m) => m.cpu && m.cpu.percentCPUUsage > 3).map((m) => `${m.type}#${m.pid} ${m.cpu.percentCPUUsage.toFixed(1)}%`);
       if (rows.length) console.log('[cpu]', rows.join(' | '));
     } catch { /* 诊断用 */ }
   }, 30e3);
   store = new Store(path.join(app.getPath('userData'), 'widget-store.json'), DEFAULTS);
+  try { // hide-log 封顶:诊断日志只增不删,超 256KB 时截尾保留最近 500 行,防常年无限增长
+    const logPath = path.join(app.getPath('userData'), 'hide-log.txt');
+    if (fs.statSync(logPath).size > 256 * 1024) {
+      const tail = fs.readFileSync(logPath, 'utf8').split(/\r?\n/).filter(Boolean).slice(-500);
+      fs.writeFileSync(logPath, tail.length ? tail.join('\n') + '\n' : '');
+    }
+  } catch { /* 首次运行无文件,忽略 */ }
   if (store.get('hoverUnlimited') === true) store.set('flexMode', true); // 旧键迁移:「悬停解除上限」→「灵活模式」
   preShotTheme = store.get('theme'); preShotMapPool = store.get('mapPool'); // 截图模式结束后还原
   syncNativeTheme(); // 原生控件(下拉弹窗)深浅随应用主题
@@ -2610,4 +2620,4 @@ app.whenReady().then(async () => {
 });
 
 app.on('window-all-closed', () => { /* 常驻托盘 */ });
-app.on('before-quit', () => { quitting = true; });
+app.on('before-quit', () => { quitting = true; try { store && store.flush(); } catch { /* 未初始化即退出 */ } });

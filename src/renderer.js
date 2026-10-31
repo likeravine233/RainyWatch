@@ -9,7 +9,7 @@ let MAPPOOL = {}; // push:data.maps:LP 赛事页弹层采到的 BP 图序(key=�
 let ACRYLIC = false;
 let GLASS_CAP = false; // 取景玻璃(主进程允许采集,渲染层起 getDisplayMedia 视频流)
 let HERO_M = null;    // 当前主卡比赛(复制比分用)
-let MATCH_BY_KEY = {}; // matchKey -> 比赛对象(行右键菜单取数,renderMatches 重建)
+let MATCH_BY_KEY = {}; // matchKey -> { 分区: 比赛对象 }(行右键菜单取数,renderMatches 重建;同 key 多分区共存)
 let APP_VER = '';     // 应用版本(主进程 payload 带入,GitHub 反馈正文用)
 // GitHub 反馈仓库(RainyWatch):当前为私有仓库,公开后反馈按钮对所有人可用。
 // 右键"数据不准?"会以 ?title=&body= 预填 issue 模板,用户一打开就是待填的反馈框
@@ -39,6 +39,8 @@ const slugOf = (href) => {
 // 主链路:渲染层 getDisplayMedia 常驻视频流(主进程自动放行、免选择器),GPU 合成高斯模糊,
 // 零轮询、零 IPC 大图;液态主题再用 SVG feDisplacementMap 对真实像素做边缘折射。
 // 兜底:视频流不可用时由主进程低频截图帧(glass-frame)接管。
+// 【可达性】frost/liquid 主题已从用户可选清单移除:本函数在用户路径恒 false,取景玻璃全链
+// (含下方几何轮询/视频流)仅 --shot=frost/liquid 开发口可达,生产为休眠代码——详见 main.js glassTheme 注释
 function glassWanted() {
   // 图钉保持顶层窗口(不再挂桌面层),accent/背板在图钉下照常可用,无需强制取景玻璃
   return GLASS_CAP && ['frost', 'liquid'].includes(SETTINGS?.theme);
@@ -836,8 +838,7 @@ function setHtml(el, html) { // 修补式更新:与上一轮一字未变就不�
 }
 function renderWithScrollKeep(el, html) {
   const keep = new Map($$('.sec-body', el).map(b => [b.closest('.list-section')?.dataset.sec, b.scrollTop]));
-  if (!setHtml(el, html)) return; // 内容没变:整树不重建,滚动位置/裁切标记原样,连恢复动作都省掉
-  el.innerHTML = html;
+  if (!setHtml(el, html)) return; // 内容没变:整树不重建,滚动位置/裁切标记原样,连恢复动作都省掉;setHtml 内已写 innerHTML,此处不再重复写第二遍
   $$('.sec-body', el).forEach(b => {
     const t = keep.get(b.closest('.list-section')?.dataset.sec);
     if (t) b.scrollTop = Math.min(t, Math.max(0, b.scrollHeight - b.clientHeight));
@@ -848,25 +849,27 @@ function renderMatches() {
   const el = $('#up-list');
   const { live, upcoming, recent } = applyTierFilter(sortedMatches()); // 级别过滤只作用列表显示
   const picked = heroSource(); // 与主卡同一来源:置顶场即使低于过滤档位也只占主卡,不在列表重复出现
-  MATCH_BY_KEY = {}; // 行右键菜单取数索引:key -> 比赛对象
-  if (picked) MATCH_BY_KEY[matchKey(picked)] = picked;
+  MATCH_BY_KEY = {}; // 行右键菜单取数索引:key -> { 分区: 比赛对象 }。matchKey 不含 ts 是刻意设计(改期不丢 pin),
+  // 但同队对 rematch 时同一 key 会出现在多个分区:按分区存才不互相覆盖,右键菜单不再取到别区的场次
+  const putMatch = (sec, m) => { const k = matchKey(m); (MATCH_BY_KEY[k] || (MATCH_BY_KEY[k] = {}))[sec] = m; };
+  if (picked) putMatch('hero', picked);
   let html = '';
   const liveOthers = live.filter(m => m !== picked); // 被置顶占主卡的直播从"其他"让位,不重复显示
   if (liveOthers.length) { // xs/s 也渲染:最小尺寸下页签隐藏时,"直播中"分区不再跟着消失
     let rows = '';
-    for (const m of liveOthers) { MATCH_BY_KEY[matchKey(m)] = m; rows += matchRow(m); } // 不设上限,区内滚动
+    for (const m of liveOthers) { putMatch('live-others', m); rows += matchRow(m); } // 不设上限,区内滚动
       html += section('live-others', T('sec.live.others', { n: liveOthers.length }), rows, true);
   }
   const upsTitle = T('sec.upcoming') + (starCount(upcoming) ? T('sec.upcoming.star') : '');
   const ups = upcoming.filter(m => m !== picked); // 主卡显示谁就从列表排除谁;全量渲染,超出由区内滚动消化
   let upRows = '';
   if (!upcoming.length) upRows = `<div class="empty">${T('empty.upcoming')}</div>`;
-  else for (const m of ups) { MATCH_BY_KEY[matchKey(m)] = m; upRows += matchRow(m); }
+  else for (const m of ups) { putMatch('upcoming', m); upRows += matchRow(m); }
   html += section('upcoming', upsTitle, upRows, true);
   // 最近赛果:与"直播中"同位显示,故不因 short 尺寸隐藏,而做成可折叠
   if (recent.length) {
     let reRows = '';
-    for (const m of recent) { MATCH_BY_KEY[matchKey(m)] = m; reRows += matchRow(m); } // 分区自带滚动,条目不设上限
+    for (const m of recent) { putMatch('recent', m); reRows += matchRow(m); } // 分区自带滚动,条目不设上限
     html += section('recent', T('sec.recent'), reRows, true);
   }
   renderWithScrollKeep(el, html);
@@ -1356,23 +1359,27 @@ setInterval(() => {
   }
   $$('[data-elapsed]').forEach(el => {
     const ts = +el.dataset.ts;
-    if (ts) el.textContent = fmtElapsed(Date.now() - ts);
+    if (!ts) return;
+    const txt = fmtElapsed(Date.now() - ts);
+    if (el.textContent !== txt) el.textContent = txt; // 分钟粒度:输出没变的秒不写 DOM
   });
   $$('[data-mtime]').forEach(el => {
     const ts = +el.dataset.ts;
     if (!ts) return;
-    if (upcomingStarted(ts)) {
-      if (el.dataset.dot !== '1') { el.dataset.dot = '1'; el.innerHTML = `${T('hero.soon')}${CD_DOTS}`; } // 同主卡:进态只写一次
-    } else {
-      delete el.dataset.dot;
-      el.textContent = upcomingTimeText(ts);
-    }
+    const started = upcomingStarted(ts);
+    const txt = started ? `${T('hero.soon')}${CD_DOTS}` : upcomingTimeText(ts);
+    const sig = txt + (upcomingSoon(ts) ? '|S' : '') + (started ? '|G' : '');
+    if (el.dataset.tsig === sig) return; // 输出未变就短路:不写 textContent、不 toggle、不 fitRows。分钟粒度下绝大多数秒停在此,省掉每行每秒的布局读(此前每秒无条件 clientWidth/scrollWidth)
+    el.dataset.tsig = sig;
+    if (started) el.innerHTML = txt; // 进态整体重建一次(含跳动小点);sig 不变不再重写,动画不重启
+    else el.textContent = txt;
     el.classList.toggle('soon', upcomingSoon(ts));
-    el.classList.toggle('started', upcomingStarted(ts));
+    el.classList.toggle('started', started);
     fitRows(el.closest('.m-right') || undefined); // 倒计时↔时刻切换会改变行宽占用,即时重算渐隐
   });
   $$('[data-endts]').forEach(el => {
-    el.textContent = endAgoText(Date.now() - +el.dataset.endts, !!el.dataset.approx);
+    const txt = endAgoText(Date.now() - +el.dataset.endts, !!el.dataset.approx);
+    if (el.textContent !== txt) el.textContent = txt; // 同上:输出未变不写
   });
   const upd = $('#updated');
   if (upd && META) upd.textContent = agoText(META.updatedAt);
@@ -1991,7 +1998,13 @@ function bindEvents() {
     const inHero = e.target.closest('#hero');
     if (!row && !inHero) return;
     e.preventDefault();
-    const m = row ? MATCH_BY_KEY[row.dataset.key] : HERO_M;
+    // 按行所在分区取场次(matchKey 无 ts,同队对 rematch 会同 key 多分区共存);分区未命中时兜底取任一,菜单不至于空
+    let m = HERO_M;
+    if (row) {
+      const entry = MATCH_BY_KEY[row.dataset.key];
+      const sec = row.closest('.list-section')?.dataset.sec;
+      m = entry ? (entry[sec] || entry[Object.keys(entry)[0]]) : undefined;
+    }
     openCtx(matchCtxItems(m), e.clientX + 2, e.clientY + 2);
   });
   document.addEventListener('click', (e) => { if (!e.target.closest || !e.target.closest('#ctx-menu')) closeCtx(); }, true); // 捕获阶段关闭:行点击等代理 stopPropagation 会吃掉气泡,菜单内点击除外(由菜单项自身处理)

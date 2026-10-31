@@ -63,3 +63,12 @@ const sha256 = (f) => crypto.createHash('sha256').update(fs.readFileSync(f)).dig
 fs.writeFileSync('dist-release/SHA256SUMS.txt',
   `${sha256('dist-release/RainyWatch-Portable.exe')}  RainyWatch-Portable.exe\r\n${sha256(`dist-release/${zipName}`)}  ${zipName}\r\n`);
 console.log('[build] -> dist-release/SHA256SUMS.txt(双行:portable + zip)');
+
+// 构建全链成功后,清理历史 build-tmp*(保留本次的 out,作为最近一次成品)。
+// EDR 可能锁旧目录里的 .asar 导致删不净,尽力而为,锁住的留待下次构建/重启后再清。
+for (const d of fs.readdirSync('.').filter(x => /^build-tmp\d*$/.test(x) && x !== out)) {
+  try {
+    fs.rmSync(d, { recursive: true, force: true, maxRetries: 5, retryDelay: 800 });
+    console.log(`[build] 已清理历史构建目录 ${d}`);
+  } catch { console.log(`[build] ${d} 被占用,留待下次清理`); }
+}

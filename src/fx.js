@@ -29,12 +29,18 @@ window.fxApply = () => { document.body.dataset.fx = window.fxEnabledIds().join('
    低功耗 / 系统减少动态 时不生效。 */
 (() => {
   const rmq = window.matchMedia('(prefers-reduced-motion: reduce)');
-  let raf = 0, on = false, px = 0, py = 0;
-  const paint = () => {
+  let raf = 0, on = false, px = 0, py = 0, lastPaint = 0;
+  const paint = (now) => {
     raf = 0;
     const hero = document.getElementById('hero');
     if (!hero) return;
     if (!on) { hero.style.transform = ''; return; } // --mx/--my 冻结在离开前的值:蓝色流光原位淡出,不再瞬移回卡片中间
+    // 帧闸:visualFps>0 时交互直写通道同守硬上限(与 versus-wave 的 effFps 帧闸同族,0.4ms 容差吸收整除抖动)。
+    // 上限语义(v2.6)承诺"任何模式都不会超过此值";此前 tilt 不产 Animation 对象、visualclock 管不到,
+    // 高刷屏悬停期间以原生刷新率逐帧写 transform,是该承诺下唯一漏网的常驻通道
+    const vf = typeof SETTINGS !== 'undefined' && SETTINGS ? Number(SETTINGS.visualFps) : 0;
+    if (vf > 0 && now - lastPaint < 1000 / vf - 0.4) { raf = requestAnimationFrame(paint); return; }
+    lastPaint = now;
     const r = hero.getBoundingClientRect();
     const nx = Math.max(-1, Math.min(1, ((px - r.left) / Math.max(1, r.width)) * 2 - 1));
     const ny = Math.max(-1, Math.min(1, ((py - r.top) / Math.max(1, r.height)) * 2 - 1));

@@ -43,6 +43,7 @@
   body[data-lang="en"] .star-row .tip .en { display: block; }
   .star-row .peek { width: 40px; height: 40px; flex: none; animation: peek-in .6s cubic-bezier(.34, 1.56, .64, 1) .1s both; }
   .star-row .peek img { width: 100%; height: 100%; animation: peek-bob 2.8s ease-in-out .9s infinite; }
+  body:not([data-vis]) .star-row .peek img { animation-play-state: paused; } /* 隐藏预热期挂起常驻浮动(菜单窗 hide 即销毁、后台重建预热,隐藏态常驻);可见才跑,口径同主窗 #upd 修复。入场有限动画(tip-in/peek-in)不受影响,先画后弹照常 */
   @keyframes tip-in { from { opacity: 0; transform: translateX(-16px); } to { opacity: 1; transform: translateX(0); } }
   /* 水月出场:弹性弹出后缓缓上下浮动(此前 keyframes 丢失,立绘一直静止出现,这里补回) */
   @keyframes peek-in { from { opacity: 0; transform: translateY(16px) scale(.7); } to { opacity: 1; transform: translateY(0) scale(1); } }
@@ -67,6 +68,15 @@
   document.addEventListener('click', (e) => { const mi = e.target.closest('.mi'); if (mi) trayapi.click(mi.dataset.id); const st = e.target.closest('.star-row'); if (st) trayapi.click(st.dataset.id); });
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape') trayapi.hide(); });
   document.addEventListener('contextmenu', (e) => e.preventDefault());
+  // peek-bob 可见性门控的数据面:菜单窗由主进程在后台重建预热(backgroundThrottling:false 关节流),
+  // 隐藏期间 visibilityState='hidden' → 挂起无限动画;show 时 visibilitychange 恢复。无需主进程另发标志。
+  // 注意隐藏时须 delete 属性:置空串属性仍存在,CSS :not([data-vis]) 不会命中
+  const syncVis = () => {
+    if (document.visibilityState === 'visible') document.body.dataset.vis = '1';
+    else delete document.body.dataset.vis;
+  };
+  document.addEventListener('visibilitychange', syncVis);
+  syncVis();
 </script>
 </body>
 </html>

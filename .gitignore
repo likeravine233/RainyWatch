@@ -26,3 +26,6 @@ _dev/color-audit.js
 _dev/collect-logos.js
 _dev/vhs-embed.css
 _dev/site-check/
+
+# 本机性能审计/研究笔记:只留本地
+_dev/notes/
