@@ -8,7 +8,8 @@
   "license": "AGPL-3.0-only",
   "scripts": {
     "start": "electron .",
-    "dist": "node _dev/build.js"
+    "dist": "node _dev/build.js",
+    "test": "node _dev/test-eventpool.js && node _dev/test-pending.js && node _dev/test-playerstatus.js && node _dev/test-supplement.js && node _dev/test-teampool.js && node _dev/test-store.js"
   },
   "devDependencies": {
     "electron": "^33.0.0",
@@ -21,9 +22,6 @@
   "build": {
     "appId": "local.rainywatch.lite",
     "productName": "RainyWatch",
-    "directories": {
-      "output": "dist-release3"
-    },
     "asarUnpack": [
       "node_modules/koffi/**"
     ],
@@ -33,8 +31,7 @@
       "src/**/*",
       "lib/**/*",
       "assets/**/*",
-      "package.json",
-      "_dev/mock-data.json"
+      "package.json"
     ],
     "win": {
       "target": [

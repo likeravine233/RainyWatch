@@ -3,11 +3,10 @@ const { app, BrowserWindow, Tray, Menu, ipcMain, nativeImage, nativeTheme, Notif
 const path = require('path');
 const fs = require('fs');
 const os = require('os');
-const https = require('https');
-const zlib = require('zlib');
 const crypto = require('crypto');
+const { Readable } = require('stream');
 const { Store } = require('./lib/store');
-const { fetchWikiPage, apiQuery, searchPlayers, searchPandaPlayers, lpCooldownUntil } = require('./lib/fetcher');
+const { fetchWikiPage, apiQuery, searchPlayers, searchPandaPlayers, lpCooldownUntil, netFetch } = require('./lib/fetcher');
 const { parseMatches, parseEventMaps, parseEvents, parseTransfers, parsePlayerTeam, parseTeamRoster, parseVrs, parseEventTier, parseEventDates, parseVrsStamp } = require('./lib/parser');
 const { fetchPandaRunning, findForTeams, fetchPandaMatchList, matchKey, mergeFallback, pandaRecentPair, supplementRecent } = require('./lib/live');
 const { learnEvents, lookupEvent } = require('./lib/eventpool');
@@ -900,7 +899,7 @@ let lastWjLive = null; // 上一轮玩机器开播结论(null=未知):翻转时�
 async function fetchStreamerLive(entry) {
   const url = entry.platform === 'douyu' ? `https://www.douyu.com/${entry.room}`
     : `https://www.huya.com/${entry.room}`; // Twitch 不在此列:走 Helix 批量接口,不做页面抓取
-  const res = await fetch(url, {
+  const res = await netFetch(url, {
     headers: {
       'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36',
       'Referer': `https://www.${entry.platform}.com/`,
@@ -935,7 +934,7 @@ function twitchCreds() {
 }
 async function twitchAppToken(id, secret) {
   if (twitchTok && twitchTok.exp > Date.now() + 60e3) return twitchTok.token;
-  const res = await fetch('https://id.twitch.tv/oauth2/token', {
+  const res = await netFetch('https://id.twitch.tv/oauth2/token', {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: new URLSearchParams({ client_id: id, client_secret: secret, grant_type: 'client_credentials' }),
@@ -950,7 +949,7 @@ async function refreshTwitchBatch(entries) {
   if (!entries.length) return;
   const { id, secret } = twitchCreds();
   const token = await twitchAppToken(id, secret);
-  const res = await fetch('https://api.twitch.tv/helix/streams?' + entries.map((s) => 'user_login=' + encodeURIComponent(s.room)).join('&'), {
+  const res = await netFetch('https://api.twitch.tv/helix/streams?' + entries.map((s) => 'user_login=' + encodeURIComponent(s.room)).join('&'), {
     headers: { 'Client-Id': id, 'Authorization': 'Bearer ' + token }, signal: AbortSignal.timeout(15000),
   });
   if (res.status === 401) { twitchTok = null; const e = new Error('Twitch token 需重取'); e.status = 401; throw e; } // 下轮自动重换 app token
@@ -1659,19 +1658,9 @@ function newerVer(a, b) { // a 是否比 b 新(三段数字逐段比)
   for (let i = 0; i < 3; i++) if ((x[i] || 0) !== (y[i] || 0)) return (x[i] || 0) > (y[i] || 0);
   return false;
 }
-function ghGet(url) { // GitHub API 小助手:gzip + UA;不走 fetcher 的 LP 限速队列,两套节奏互不干扰
-  return new Promise((resolve, reject) => {
-    const req = https.get(url, { headers: { 'User-Agent': 'RainyWatch-Updater', 'Accept': 'application/vnd.github+json', 'Accept-Encoding': 'gzip' }, timeout: 10000 }, (res) => {
-      const chunks = [];
-      const stream = /^gzip/.test(res.headers['content-encoding'] || '') ? zlib.createGunzip() : res;
-      if (stream !== res) res.pipe(stream);
-      stream.on('data', (c) => chunks.push(c));
-      stream.on('end', () => resolve({ code: res.statusCode, body: Buffer.concat(chunks).toString('utf8') }));
-      stream.on('error', reject);
-    });
-    req.on('timeout', () => req.destroy(new Error('timeout')));
-    req.on('error', reject);
-  });
+async function ghGet(url) { // GitHub API 小助手:UA + net.fetch(自动解压,跟随系统代理);不走 fetcher 的 LP 限速队列,两套节奏互不干扰
+  const res = await netFetch(url, { headers: { 'User-Agent': 'RainyWatch-Updater', 'Accept': 'application/vnd.github+json' }, signal: AbortSignal.timeout(10000) });
+  return { code: res.status, body: await res.text() };
 }
 async function checkUpdate(manual) {
   lastUpdCheckAt = Date.now();
@@ -1715,27 +1704,36 @@ function showUpdate() { // 弹窗路由:窗口可见、未锁穿透、非迷你 
 // ---------- 一键更新:应用内下载 → SHA256 校验 → 退出后由助手脚本换文件并重启 ----------
 // 便携包无法在运行中覆盖自己:把新 exe 下到临时目录,校验通过后落一个 PowerShell 助手,
 // 它等本进程退出 → 拷贝覆盖原 exe → 重新拉起。仓库私有期间 release 拉不到,按钮自然不出现。
-function ghDownload(url, dest, onProg) { // 下载 release 资产(跟随最多 3 次重定向);onProg(已收, 总长)
-  return new Promise((resolve, reject) => {
-    const go = (u, n) => {
-      if (n > 3) return reject(new Error('redirect'));
-      const req = https.get(u, { headers: { 'User-Agent': 'RainyWatch-Updater' }, timeout: 15000 }, (res) => {
-        if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) { res.resume(); return go(res.headers.location, n + 1); }
-        if (res.statusCode !== 200) { res.resume(); return reject(new Error('HTTP ' + res.statusCode)); }
-        const total = parseInt(res.headers['content-length'], 10) || 0;
-        if (total > 220 * 1024 * 1024) { res.resume(); return reject(new Error('size')); } // 便携包远小于此,防呆
-        const f = fs.createWriteStream(dest);
-        let got = 0;
-        res.on('data', (c) => { got += c.length; if (onProg) onProg(got, total); });
-        res.pipe(f);
-        f.on('finish', () => f.close(() => resolve(got)));
-        f.on('error', (e) => { try { fs.rmSync(dest, { force: true }); } catch { } reject(e); });
-      });
-      req.on('timeout', () => req.destroy(new Error('timeout')));
-      req.on('error', reject);
-    };
-    go(url, 0);
-  });
+async function ghDownload(url, dest, onProg) { // 下载 release 资产(net.fetch 自动跟随重定向);onProg(已收, 总长);15s 无新数据即中止
+  const MAX = 220 * 1024 * 1024; // 便携包远小于此,防呆
+  const ac = new AbortController();
+  let idle = null;
+  const arm = () => { clearTimeout(idle); idle = setTimeout(() => ac.abort(new Error('timeout')), 15000); }; // 空闲超时:每到一块数据重新计 15s
+  try {
+    arm();
+    const res = await netFetch(url, { headers: { 'User-Agent': 'RainyWatch-Updater' }, signal: ac.signal });
+    if (res.status !== 200) throw new Error('HTTP ' + res.status);
+    const total = Number(res.headers.get('content-length')) || 0;
+    if (total > MAX) throw new Error('size');
+    const src = Readable.fromWeb(res.body);
+    const f = fs.createWriteStream(dest);
+    let got = 0;
+    src.on('data', (c) => {
+      got += c.length;
+      arm();
+      if (got > MAX) src.destroy(new Error('size')); // 声明长度缺失/撒谎时按实收兜底
+      if (onProg) onProg(got, total);
+    });
+    src.pipe(f);
+    try { await new Promise((ok, bad) => { f.on('finish', ok); f.on('error', bad); src.on('error', bad); }); }
+    catch (e) { f.destroy(); throw e; }
+    clearTimeout(idle);
+    return got;
+  } catch (e) {
+    clearTimeout(idle);
+    try { fs.rmSync(dest, { force: true }); } catch { } // 半成品不留
+    throw e;
+  }
 }
 async function updInstall() {
   if (UPDDL.phase === 'downloading' || UPDDL.phase === 'verifying') return { ...UPDDL }; // 已在进行,不重复下
@@ -2080,10 +2078,21 @@ ipcMain.on('transfers-seen', () => {
   newTransferIds = [];
   pushData();
 });
+// 主进程专属键:凭证、归档/缓存(评级/赛果档案、队伍池、别名表、ETag、图序)、窗口状态、内部统计。
+// set:setting 对渲染层是任意键写入通道,这些键只许主进程或专用 IPC(set:panda/set:twitch/star:*/set:size)落笔,遇之直接跳过
+const MAIN_OWNED_KEYS = new Set([
+  'pandaToken', 'twitchClientId', 'twitchSecret',
+  'starPlayers', 'starTeams', 'playerCache', 'teamPool', 'teamAlias',
+  'matchArchive', 'tierArchive', 'tierRetry2', 'eventPool', 'eventSub', 'pandaSupplement',
+  'mapPool', 'mapEtags', 'endedAt', 'lastSeenTransferId', 'updateSeen',
+  'etagMatches', 'etagEvents', 'etagTransfers', 'etagVrs',
+  'bounds', 'mini', 'sizePreset',
+]);
 ipcMain.on('set:setting', (e, kv) => {
   if (!kv || typeof kv !== 'object') return;
   const transModeBefore = transMode(); // transparent 是创建期属性:改设置前先记下档位
   for (const [k, v] of Object.entries(kv)) {
+    if (MAIN_OWNED_KEYS.has(k)) continue;
     store.set(k, v);
     if (k === 'autostart') applyAutoLaunch();
     if (k === 'onTop' && v && store.get('deskPin')) { // 置顶与图钉互斥:开置顶则退出图钉并解除桌面挂载
