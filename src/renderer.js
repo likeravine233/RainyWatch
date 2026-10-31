@@ -21,6 +21,7 @@ const FEEDBACK_REPO = 'https://github.com/likeravine233/RainyWatch';
 const RELEASE_NOTES = {
   '0.0.1': { code: '红狐商会', quote: '“爱如此刻永恒”' },
   '0.0.2': { code: '昨夜来电', quote: 'We go forth and multiply!' },
+  '0.0.3': { code: '环形绿洲', quote: '在此处寻光明' },
 };
 // 界面文案取词(lang 设置驱动),{n} 类占位替换
 const UIL = () => (SETTINGS && SETTINGS.uiLang) || 'zh'; // 界面语言(独立设置,界面只管界面;赛事文本用 LANG)

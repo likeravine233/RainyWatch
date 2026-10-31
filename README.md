@@ -154,13 +154,13 @@ RainyWatch 常驻桌面、窗口置顶,带有持续的环境动效,透明窗体�
 - **多开共享限速**:同时开多个实例(或与其它版本同开)时共享限速额度,不容易触发数据源封禁;触发 429 后全实例同步静默冷却,不"边封禁边重试"
 - **手动刷新有 30 秒冷却**(题头同步点 = 刷新入口):防连点把请求队列堆满触发限流;冷却期点击会黄点脉冲提示剩余秒数
 - **启动先显缓存**:赛事 / 变阵 / 图序 / 排名全部本地缓存,打开即显示上次数据,后台静默更新(赛事/变阵 30 分钟一轮,ETag 无变化不重绘);首次使用无缓存时,对应区块显示"正在同步…"挂起态,而不是误导性的"暂无"
-- 自动跟随系统代理;断网或请求失败时黄点提示"数据可能过期"
+- 全部网络请求(Liquipedia / PandaScore / Twitch / 斗鱼虎牙 / GitHub 更新检查与下载)自动跟随系统代理;断网或请求失败时黄点提示"数据可能过期"
 
 ### 📥 下载与使用
 
 从 [Releases](https://github.com/likeravine233/RainyWatch/releases) 下载,两种包任选(Windows 10 / 11):
 
-- **`RainyWatch-v0.0.1-win-x64.zip`(推荐)**:解压到任意目录,双击 `RainyWatch.exe`——解压一次,此后**每次启动都秒开**。
+- **`RainyWatch-v0.0.3-win-x64.zip`(推荐)**:解压到任意目录,双击 `RainyWatch.exe`——解压一次,此后**每次启动都秒开**。
 - **`RainyWatch-Portable.exe`**:单文件便携版,双击即用;便携形态每次启动都要自解压(约十秒),介意等待请选 zip。
 
 首次启动几秒后出数据。
@@ -174,6 +174,7 @@ RainyWatch 常驻桌面、窗口置顶,带有持续的环境动效,透明窗体�
 ```bash
 npm install
 npm start        # 开发模式
+npm test         # 单元测试(纯 Node,无需启动 Electron)
 npm run dist     # 打包 → dist-release/:Portable.exe + win-x64.zip + SHA256SUMS.txt
 ```
 
@@ -218,7 +219,7 @@ npm run dist     # 打包 → dist-release/:Portable.exe + win-x64.zip + SHA256S
 | 高光选手的队伍不对? | "当前队伍"来自其 Liquipedia 选手页,刚转会的选手可能滞后数小时;重启应用会自动重新解析。置顶匹配已兼容 PandaScore 与 Liquipedia 的队名差异 |
 | 变阵的标签和解说怎么来的? | 由每条 Liquipedia 转会条目(备注 / 去向 / 队伍关系)在本地推断:转入替补席、租借、擢升一线队、下放二队等十余种动作各有一句话解说,行内标签可直接读;国籍在中文界面显示中文 |
 | 英文主播条目不见了? | 英文界面且未配置 Twitch 凭证时不显示英文主播(也不会访问 Twitch):按 设置 → 数据 的问号提示免费申请 Client ID / Secret 并粘贴,绿点即恢复 |
-| 怎么知道有新版本? | 题头「发现新版本」角标 + 每版本一次的启动提示;设置面板底部「检查更新」随时手动查;新版 exe 覆盖旧版即完成更新(设置与凭证保留) |
+| 怎么知道有新版本? | 题头「发现新版本」角标 + 每版本一次的启动提示;设置面板底部「检查更新」随时手动查;「一键更新」会按当前形态自动下载、校验并替换重启,也可以手动下载新版覆盖旧版(设置与凭证保留) |
 | 想反馈问题? | 设置面板底部"反馈与支持"直达 [Issues](https://github.com/likeravine233/RainyWatch/issues),版本与系统环境会自动附上;数据 / 功能 / 界面主题三套模板均提供中英双语 |
 
 ### 🙏 数据来源与致谢
@@ -363,13 +364,13 @@ If your machine is tight on resources, dial it down:
 - **Rate-limit budget shared across instances**; after a 429 all instances cool down together instead of retrying into the ban
 - **Manual refresh has a 30 s cooldown** (the header sync dot is the refresh entry) to prevent click-storms from stacking requests
 - **Cache-first startup**: events / transfers / map sequences / rankings are cached locally and shown instantly; sections without any cache show a "syncing…" placeholder instead of a misleading "no data" (events/transfers re-poll every 30 min; unchanged content never re-renders)
-- System-proxy aware; yellow dot warns when data may be stale
+- Every request (Liquipedia / PandaScore / Twitch / Douyu & Huya / GitHub update check & download) follows the system proxy; yellow dot warns when data may be stale
 
 ### 📥 Download & run
 
 Grab either package from [Releases](https://github.com/likeravine233/RainyWatch/releases) (Windows 10 / 11):
 
-- **`RainyWatch-v0.0.1-win-x64.zip` (recommended)**: extract anywhere and double-click `RainyWatch.exe` — extract once, and every launch afterwards is instant.
+- **`RainyWatch-v0.0.3-win-x64.zip` (recommended)**: extract anywhere and double-click `RainyWatch.exe` — extract once, and every launch afterwards is instant.
 - **`RainyWatch-Portable.exe`**: single file, double-click to run; the portable form re-extracts itself on every launch (~10 s), so pick the zip if that bothers you.
 
 First data appears seconds after launch.
@@ -383,6 +384,7 @@ Or run from source:
 ```bash
 npm install
 npm start        # dev mode
+npm test         # unit tests (plain Node, no Electron needed)
 npm run dist     # build → dist-release/: Portable.exe + win-x64.zip + SHA256SUMS.txt
 ```
 
@@ -423,7 +425,7 @@ The app **works out of the box**: matches, tournaments, transfers and VRS come f
 | Why "syncing…" on first launch? | There is no local cache yet; the first fetch fills it. Later launches show cached data instantly and refresh in the background |
 | The EN streamer entries are gone? | Without Twitch credentials configured, EN streamers are neither checked nor shown (Twitch is never contacted): follow the ? hint in Settings → Data to get free credentials and paste them in |
 | Where do transfer tags & stories come from? | Inferred locally from each Liquipedia entry (notes, destination, team relationships): a dozen-plus precise moves — benched, loaned, academy promotion, demotion to the academy squad… each with a one-line story; tags are readable right on the row |
-| How do I know there is an update? | A titlebar badge plus a once-per-version dialog; "Check for updates" in settings works any time. Overwriting the old exe with the new one keeps your settings |
+| How do I know there is an update? | Titlebar "update available" badge + a one-time prompt per version; "Check for updates" at the bottom of settings any time; "One-click update" downloads, verifies and swaps in the package matching your install form, then restarts — or download the new build and overwrite the old one manually (settings and credentials are kept) |
 | Found a problem? | "Feedback" at the bottom of settings opens GitHub Issues with version and environment pre-filled; the data / feature / UI-theme templates are bilingual |
 
 ### 🙏 Data sources & credits
