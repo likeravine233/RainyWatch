@@ -9,7 +9,7 @@
   "scripts": {
     "start": "electron .",
     "dist": "node _dev/build.js",
-    "test": "node _dev/test-eventpool.js && node _dev/test-pending.js && node _dev/test-playerstatus.js && node _dev/test-supplement.js && node _dev/test-teampool.js && node _dev/test-store.js && node _dev/test-updater.js && node _dev/test-streamers.js"
+    "test": "node _dev/test-eventpool.js && node _dev/test-pending.js && node _dev/test-playerstatus.js && node _dev/test-supplement.js && node _dev/test-teampool.js && node _dev/test-store.js && node _dev/test-updater.js && node _dev/test-streamers.js && node _dev/test-fetcher-gap.js"
   },
   "devDependencies": {
     "electron": "44.9.3",
