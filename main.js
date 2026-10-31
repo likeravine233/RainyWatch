@@ -1075,8 +1075,8 @@ function createWindow() {
   w.loadFile(path.join(__dirname, 'src', 'index.html'));
   // 渲染层诊断直达终端:WebGL 实际用的是哪个渲染器只有渲染层拿得到('[fx] WebGL 渲染器: …'),
   // 打包/后台运行时 DevTools 不可见,按关键字转发到 stdout 进启动日志,用户可直接复制
-  w.webContents.on('console-message', (e, _lvl, message) => {
-    const msg = String(message ?? e?.message ?? '');
+  w.webContents.on('console-message', (e) => { // Electron 35+:位置参数弃用,统一读 Event 属性
+    const msg = String(e?.message ?? '');
     if (/fx\]|GPU/i.test(msg)) console.log('[renderer]', msg);
   });
   // ready-to-show 在 Electron 中偶发不触发(主题/取景玻璃重建后尤甚),错过即窗口永不显示
@@ -1866,7 +1866,7 @@ ipcMain.handle('search:players', async (e, q) => {
   pushSettings(); // 缓存更新同步渲染层:下次输入的本地即时建议立刻可见
   return { items: items.slice(0, 8), err: '' };
 });
-ipcMain.handle('copy-text', (e, t) => { clipboard.writeText(String(t ?? '').slice(0, 500)); return true; });
+ipcMain.handle('copy-text', (e, t) => { clipboard.writeText(String(t ?? '').slice(0, 500)).catch(() => { }); return true; }); // Electron 44:writeText 改异步返回 Promise,catch 防未处理拒绝
 ipcMain.handle('upd:check', () => checkUpdate(true));
 ipcMain.handle('upd:install', () => updInstall());
 ipcMain.handle('upd:apply', () => updApplyRestart());
