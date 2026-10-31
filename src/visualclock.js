@@ -51,6 +51,12 @@
   // 冻结门槛与 fx.js 同款:性能优先+失焦时整体停推进(已接管的保持接管,不归还)
   const frozen = () => document.body.dataset.lowpower === '1' && document.body.dataset.unfocused === '1';
 
+  // view transition 的 UA 动画(::view-transition-* 伪元素)不归本时钟:它们必须原生走到 finished,VT 才拆快照层;
+  // 收编后钳停在终点(paused≠finished)会让 vt.finished 永不 resolve,快照层常驻盖住整窗 = 切主题后面板"卡死"
+  const anims = () => document.getAnimations().filter((a) => {
+    try { return !String((a.effect && a.effect.pseudoElement) || '').startsWith('::view-transition'); } catch { return true; }
+  });
+
   // CSS 侧定格判定(权威且即时):同名对位读计算样式的 animation-play-state。
   // 无 animationName 的对象(CSS transition)不受 animation-play-state 规则管辖,CSS 从不
   // 定格它们——必须恒返回 false:不能拿 playState 兜底,收编本身就是 pause(),那会让推进
@@ -78,7 +84,7 @@
     } catch { return undefined; }
   };
   // 是否有在飞的有限动效(收尾过渡等)——降频/回落前的缓释判据
-  const draining = () => document.getAnimations().some((a) => a.playState === 'running' && endTimeOf(a) != null);
+  const draining = () => anims().some((a) => a.playState === 'running' && endTimeOf(a) != null);
 
   // 出窗探测(仅熄灭态:灵活+不限制+在窗口上):等收尾动效跑完再拉回保底帧率
   const pollTick = () => {
@@ -89,7 +95,7 @@
   };
 
   function releaseAll() { // 归还:逐个按 CSS 当前意愿代执行——要定格的就地 API 暂停,要动的 play 归还原生
-    for (const a of document.getAnimations()) {
+    for (const a of anims()) {
       a.__vc = false;
       if (a.playState === 'idle' || a.playState === 'finished') continue; // 原生已走完/已取消:不碰
       try {
@@ -103,7 +109,7 @@
 
   function resync() { // 归还再重收编(同一任务内,无渲染帧插入):设置/CSS 状态翻转即时生效
     releaseAll();
-    for (const a of document.getAnimations()) {
+    for (const a of anims()) {
       if (a.__vc || a.playState === 'idle' || a.playState === 'finished') continue;
       try {
         if (cssPaused(a)) { if (a.playState !== 'paused') a.pause(); continue; } // CSS 定格:代执行,不收编
@@ -121,7 +127,7 @@
     if (flexOn() && !cursorIn()) {
       if (!outAt) {
         outAt = now;
-        for (const a of document.getAnimations()) { // 已收编的在飞过渡归还原生——注意判据不是
+        for (const a of anims()) { // 已收编的在飞过渡归还原生——注意判据不是
           if (!a.__vc || a.animationName) continue; // playState==='running'(收编即 pause,在飞的也是 paused),而是「未到终点」
           const et = endTimeOf(a);
           try { if (et != null && a.currentTime != null && a.currentTime < et) { a.play(); a.__vc = false; } } catch { /* 已随 DOM 失效 */ }
@@ -132,7 +138,7 @@
     if (now - lastAdv >= 1000 / fps - 0.4) { // 与 fx.js 同款容差:高刷屏下任何档位实际推进率不超上限
       const dt = lastAdv ? Math.min(250, now - lastAdv) : 0; // ms(currentTime 是毫秒轴);挂起恢复不做大步长跳变
       lastAdv = now;
-      const list = document.getAnimations();
+      const list = anims();
       for (const a of list) { // 收编(CSS 侧定格的代执行暂停、不收编;idle=已取消;finished=原生已走完)
         if (a.__vc || a.playState === 'idle' || a.playState === 'finished') continue;
         if (grace && !a.animationName) continue; // 缓释期:在飞过渡保持原生跑完,不收编
